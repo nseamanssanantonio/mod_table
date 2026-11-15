@@ -1,0 +1,11 @@
+MOD TABLE — STRUCTURED SOURCE
+
+1. For the finished editor: open dist/Mod_Table.html in Chrome or Edge.
+2. Edit _INTERFACE/ for HTML, CSS and UI JavaScript.
+3. Edit _DSP/ for C++ audio algorithms, WebAssembly and worker code.
+4. Run npm run build (Node.js 18+) after interface changes.
+5. Run npm run build:wasm && npm run build after C++ changes.
+6. Run npm test for the DSP regression suite.
+7. Read README.md and docs/ARCHITECTURE.md for the directory map.
+
+The runtime editor stays standalone. Do not edit the generated dist HTML.
