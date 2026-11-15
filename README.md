@@ -1,91 +1,148 @@
-# Mod Table
+<div align="center">
 
-Mod Table is a standalone wavetable editor for creating single-cycle waveforms and exporting them as finished WAV tables. It's not a synthesizer. You can build a wave from up to 64 components, define the relationships between them, add modifiers, commit up to 256 editable keyframes, and render the table at your chosen resolution.
+# 🎛️ Mod Table
 
-This repository is organized to make the code easier to find, read, maintain, and test. The **application code lives in two sections:** `_DSP/` and `_INTERFACE/`. Build utilities, tests, examples, and documentation are kept separately.
+**Build waves. Shape transitions. Export wavetables.**
 
-## Start here
+A standalone wavetable editor I've been working on. The idea is to build a waveform from individual pieces, control how those pieces interact, and turn the results into a finished wavetable for use in other synths.
 
-- **Use the editor:** open [`dist/Mod_Table.html`](dist/Mod_Table.html) in Chrome or Edge. It is a complete standalone build.
-- **Build the standalone HTML:** `npm run build` (Node.js 18 or later).
-- **Rebuild the C++ audio engine:** `npm run build:wasm` (Clang with WebAssembly target support), then `npm run build`.
-- **Run processing tests:** `npm test`.
-- **Start a local preview server:** `npm start`, or double-click `START_WINDOWS.cmd` on Windows.
+**This is a wavetable editor, not a synthesizer.**
 
-There is no mandatory dependency installation step for the prebuilt editor. The code is still compiled to one HTML file for convenience; the editable project no longer has to be developed as one large file.
+[**🌐 Open Mod Table**](https://nseamanssanantonio.github.io/mod_table/) · [**💻 View the editor file**](mod_table.main.html) · [**📖 Getting started**](#getting-started)
 
-## Source tree
+</div>
+
+---
+
+## ✨ What it does
+
+- **64 waveform layers** — mix, shape, position, and combine waves.
+- **Wave relationships** — arithmetic, phase modulation, FM, through-zero FM, spectral operations, and more.
+- **16 modifier slots** — distortions, harmonic processors, and experimental effects.
+- **Up to 256 keyframes** — build individual waves and control the transitions between them.
+- **Full wavetable preview** — hear the working wave or sweep through the finished table.
+- **Final-table processing** — apply filters and resonance across committed and interpolated frames.
+- **Deep Scan rendering** — optional slower, higher-quality rendering and analysis.
+- **WAV export** — 128, 256, 512, 1024, 2048, 4096, or 8192 samples per frame.
+- **Automatic global peak normalization** — exported tables are normalized using the highest peak across the whole table.
+- **Project saving** — keep your work and come back to it later.
+
+There are also Undo/Redo, presets, waveform comparison, keyboard shortcuts, a built-in Help guide, and mouse-following Tips.
+
+## 🚀 Getting started
+
+**Try it online:** [nseamanssanantonio.github.io/mod_table](https://nseamanssanantonio.github.io/mod_table/)
+
+GitHub Pages opens [`mod_table.main.html`](mod_table.main.html) through the root [`index.html`](index.html). The website is a static app; the waveform processing runs in your browser.
+
+**Run it locally:** download `mod_table.main.html` and open it in Chrome or Edge. You can also use the included Windows launcher or local development server.
+
+A basic workflow is:
+
+1. Add a few waves and adjust their shapes and relationships.
+2. Add modifiers if you want to change the sound further.
+3. **Commit** the result as a keyframe.
+4. Change the wave and commit more keyframes.
+5. Adjust the timeline and transitions, then preview the table.
+6. Optionally apply final filtering, choose a frame size, and export the WAV.
+
+The **Help** button in the editor explains the controls in more detail.
+
+## 🗂️ Project structure
+
+I've separated the project by **processing** and **interface**. Within those, code is grouped by language, feature, and responsibility so it's easier to find and work on.
 
 ```text
-Mod-Table/
-├── _DSP/
+mod_table/
+├── _DSP/                         # Waveform processing
 │   ├── _c++/
-│   │   ├── engine.cpp                  # Only C++ compilation entry point
-│   │   ├── _core/                     # Shared rendering context
-│   │   ├── _waveforms/                # Base, clean, experimental, regions
-│   │   ├── _relationships/            # Wave-to-wave arithmetic/FM/spectral operations
-│   │   ├── _modifiers/                # Processing stages and retained source library
-│   │   ├── _transitions/              # Time, spectral and experimental morphing
-│   │   ├── _filters/                  # Final-table filters
-│   │   ├── _rendering/                # Composite cycle generation
-│   │   ├── _math/                     # Fourier transform and resampling
-│   │   ├── _analysis/                 # Spectrum exports
-│   │   ├── _audio/                    # Pitch-limited audition coefficients
-│   │   └── _bridge/                   # WebAssembly-compatible exported functions
+│   │   ├── _core/                # Shared processing context
+│   │   ├── _waveforms/           # Basic and experimental wave generation
+│   │   ├── _relationships/       # FM, arithmetic, phase, spectral relationships
+│   │   ├── _modifiers/           # Distortion and other waveform modifiers
+│   │   ├── _transitions/         # Keyframe morphing
+│   │   ├── _filters/             # Final-table filtering
+│   │   ├── _rendering/           # Waveform and table rendering
+│   │   ├── _math/                # Fourier and resampling utilities
+│   │   ├── _analysis/            # Spectrum and measurements
+│   │   ├── _audio/               # Audition-related processing
+│   │   └── _bridge/              # Exports for WebAssembly
 │   └── _webassembly/
-│       ├── _binary/                   # Compiled processing engine
-│       ├── _shared/
-│       │   ├── _catalogs/             # Stable waveform/relation/transition IDs
-│       │   └── _settings/             # Frame sizes, curves, validation, defaults
-│       └── _worker/
-│           ├── _core/                 # Worker state and request routing
-│           ├── _rendering/            # Composite, final render, Deep Scan
-│           ├── _keyframes/            # Intermediate-frame generation
-│           ├── _filters/              # Final-table filter preparation
-│           ├── _preview/              # Cached wavetable preview
-│           └── _analysis/             # Waveform analysis
+│       ├── _binary/              # Compiled engine
+│       ├── _shared/              # Catalogs and settings
+│       └── _worker/              # Background rendering and requests
 │
-├── _INTERFACE/
-│   ├── _html/
-│   │   ├── _shell/                    # Document start, header, navigation, status
-│   │   ├── _layout/                   # Main workspace structure
-│   │   ├── _panels/                   # Wave stack, timeline, inspectors, Table finish
-│   │   ├── _dialogs/                  # Help, Tips, presets, picker, export
-│   │   └── _components/              # Slider template
-│   ├── _css/
-│   │   ├── _foundation/               # Theme and base widgets
-│   │   ├── _layout/                   # Compact workspace and responsive rules
-│   │   ├── _wave_editor/              # Wave shape and region controls
-│   │   ├── _relationships/            # Relation inspector styles
-│   │   ├── _keyframes/                # Timeline presentation
-│   │   ├── _table_finish/             # Filters, render progress, export
-│   │   ├── _audio/                    # Audition meter and controls
-│   │   ├── _help/                     # Help modal
-│   │   └── _workspace/                # Tips, presets, context menus
-│   └── _javascript/
-│       ├── _app/                     # Vue setup, initialization and mounting
-│       ├── _state/                   # Editor state and object factories
-│       ├── _catalogs/                # Modifier descriptions
-│       ├── _components/              # Reusable slider behavior
-│       ├── _wave_editor/             # Wave stack, source settings, direct editing
-│       ├── _modifiers/               # Modifier-chain actions
-│       ├── _keyframes/               # Commit, timeline and preview
-│       ├── _table_finish/            # Filter automation and export controls
-│       ├── _audio/                   # Browser-native playback
-│       ├── _rendering/               # Working-wave rendering requests
-│       ├── _viewer/                  # Canvas drawing and navigation
-│       ├── _projects/                # Project and WAV files
-│       ├── _workspace/               # Browser, context menu, presets, comparison
-│       ├── _history/                 # Undo/Redo
-│       ├── _help/                    # Searchable Help and pointer Tips
-│       ├── _services/                # Background worker communication
-│       ├── _core/                    # Shared interface utilities
-│       └── _vendor/                  # Bundled Vue distribution
+├── _INTERFACE/                   # Everything the user sees
+│   ├── _html/                    # Page, panels, dialogs, controls
+│   ├── _css/                     # Theme, layout, feature styles
+│   └── _javascript/              # Editor state and interaction logic
+│       ├── _wave_editor/
+│       ├── _modifiers/
+│       ├── _keyframes/
+│       ├── _table_finish/
+│       ├── _audio/
+│       ├── _rendering/
+│       ├── _projects/
+│       ├── _history/
+│       ├── _help/
+│       └── ...                   # Additional small feature modules
 │
-├── build.manifest.json             # Explicit source order for the offline build
-├── scripts/                        # Build, compile, serve, example generation
-├── tests/                          # DSP, native and browser regressions
-├── examples/                       # Example projects
-├── docs/                           # Architecture, style, test records
-└── dist/                           # Finished standalone HTML
+├── scripts/                      # Build and local-server scripts
+├── build.manifest.json           # Ordered list of source files
+├── package.json
+├── mod_table.main.html           # Built application / Pages target
+└── index.html                    # GitHub Pages entry point
 ```
+
+### Where to make changes
+
+| If you're working on… | Start here |
+|---|---|
+| Waveforms, FM, modifiers, filters | `_DSP/_c++/` |
+| WebAssembly loading and render jobs | `_DSP/_webassembly/` |
+| Page sections and dialogs | `_INTERFACE/_html/` |
+| Appearance and layout | `_INTERFACE/_css/` |
+| Controls, timeline, history, Help | `_INTERFACE/_javascript/` |
+| Build order | `build.manifest.json` |
+| Final published application | `mod_table.main.html` (generated output) |
+
+## 🛠️ Building from source
+
+You'll need **Node.js 18+**. Rebuilding the processing engine also requires a C++ compiler with WebAssembly target support.
+
+```bash
+# Assemble the standalone HTML from the source files
+npm run build
+
+# Recompile the C++ processing engine when DSP code changes
+npm run build:wasm
+npm run build
+
+# Run the processing tests
+npm test
+
+# Start a local development server
+npm start
+```
+
+The build produces `dist/Mod_Table.html` locally. The repository's `mod_table.main.html` is the file currently used for GitHub Pages; update that published file from the tested build when releasing a new version.
+
+**Please edit the files in `_DSP/` and `_INTERFACE/`, not the generated application.** The source manifest controls how everything is assembled.
+
+## 🧭 How I want the code organized
+
+I'm trying to keep this project readable for humans:
+
+- One file or module should have a clear purpose.
+- Keep related processes together, but split unrelated behavior into separate files.
+- Use descriptive variable and method names.
+- Document classes and larger modules with multi-line comments.
+- Give smaller methods a short explanation of what they do.
+- Prefer small, focused functions over giant methods.
+- Keep the interface separate from the processing engine.
+
+## 📌 Status
+
+**Work in progress.** The editor is usable, but I'm still improving the interface, waveform processing, rendering quality, and compatibility with different wavetable synths. Experimental modes may change as I refine them.
+
+The goal is simple: make normal wavetables quickly, but have enough control to build some really unusual ones too.
