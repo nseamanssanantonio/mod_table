@@ -1,0 +1,157 @@
+/*
+ * Relationships between stacked waves.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* 0.7 additions stay inside the existing independently scrolling panels. */
+
+.relation-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    margin: 1px 0;
+    color: var(--teal,#83eee1);
+    border-radius: 6px;
+    background: #142730;
+    min-height: 28px;
+}
+
+.relation-link.active {
+    outline: 1px solid #557f89;
+}
+
+.relation-link.off {
+    opacity: .5;
+}
+
+.relation-link select {
+    font-size: 10px;
+    padding: 3px 6px;
+    min-height: 25px;
+    flex: 1;
+    min-width: 0;
+    background: #152d37;
+    color: #aee7df;
+    border: 1px solid #35515c;
+}
+
+.relation-line {
+    font-size: 14px;
+    flex: 0 0 12px;
+}
+
+.relation-link .icon {
+    width: 24px;
+    min-height: 24px;
+}
+
+.relationship-inspector {
+    background: #142830;
+}
+
+.relationship-inspector summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.relationship-inspector summary .check {
+    font-size: 10px;
+    margin: 0;
+}
+
+.relationship-inspector .quality-note {
+    margin: 7px 0;
+}
+
+.relationship-inspector .field select {
+    font-size: 10px;
+}
+
+.advanced-settings {
+    margin-top: 8px;
+    border-top: 1px solid #35515c;
+    padding-top: 8px;
+}
+
+.advanced-settings summary {
+    font-weight: 400;
+    font-size: 10px;
+    color: #96b0bc;
+}
+
+.experimental-controls {
+    padding-top: 8px;
+}
+
+.transition-settings {
+    margin: 5px 0;
+    padding: 5px 8px;
+    border: 1px solid #35515c;
+    border-radius: 6px;
+}
+
+.transition-settings summary {
+    font-size: 10px;
+    cursor: pointer;
+    color: #c1d9df;
+}
+
+.transition-settings summary span {
+    font-size: 9px;
+    font-weight: 400;
+    color: #8da7b3;
+    margin-left: 8px;
+}
+
+.transition-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 14px;
+}
+
+.transition-grid .segment-settings {
+    grid-column: 1/-1;
+}
+
+.segment-settings label {
+    font-size: 10px;
+    display: block;
+    margin: 4px 0;
+}
+
+.transition-settings input[type=number] {
+    width: 72px;
+}
+
+.frame-options select {
+    min-width: 0;
+    max-width: 205px;
+}
+
+.source-card .source-title {
+    font-size: 10px;
+}
+
+.source-card .source-variant {
+    font-size: 9px;
+}
+
+.experimental-controls .adapt {
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+@media (max-width:1150px) {
+    .transition-grid {
+        grid-template-columns: 1fr;
+    }
+    .frame-options {
+        flex-wrap: wrap;
+    }
+}

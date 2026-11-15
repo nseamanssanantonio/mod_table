@@ -1,0 +1,200 @@
+<!-- modifier inspector -->
+<div class="inspector-section effect-inspector" v-else-if="tab!=='sources'&&tab!=='tablefx'&&selectedEffect" :key="'e'+selectedEffect.id">
+  <div class="row between">
+    <h3>
+      Slot {{selectedEffectIndex+1}}
+    </h3>
+    <label class="check" style="margin:0">
+      <input type="checkbox" v-model="selectedEffect.on" @change="edit()">
+      Enabled
+    </label>
+  </div>
+  <div class="row pad-top picker-buttons">
+    <button class="small" @click="openPicker('effect')">
+      ⌕ Browse modifiers ★
+    </button>
+    <button class="small quiet" @click="presetsOpen=true;presetKind='chain'">
+      Save chain preset
+    </button>
+  </div>
+  <div class="field">
+    <label>
+      Viscera processor
+    </label>
+    <select v-model.number="selectedEffect.type" @change="edit()" aria-label="Selected effect type">
+      <optgroup v-for="group in effectGroups" :key="group.id" :label="group.label">
+        <option v-for="fx in catalog.filter(f=>f.category===group.id)" :key="fx.id" :value="fx.id">
+          {{fx.name}}
+        </option>
+      </optgroup>
+    </select>
+  </div>
+  <p class="muted" style="font-size:11px;margin-top:10px">
+    {{effectInfo(selectedEffect.type).description}}
+  </p>
+  <control-slider
+    label="Shape / intensity"
+    :reset-value="40"
+    :model-value="selectedEffect.shape"
+    @update:model-value="selectedEffect.shape=$event;edit()"
+    :min="0"
+    :max="100"
+    :step="0.1"
+    unit="%">
+  </control-slider>
+  <control-slider
+    label="Dry / wet"
+    :reset-value="100"
+    :model-value="selectedEffect.mix"
+    @update:model-value="selectedEffect.mix=$event;edit()"
+    :min="0"
+    :max="100"
+    :step="0.1"
+    unit="%"
+    help="0% is exact bypass; 100% is fully processed.">
+  </control-slider>
+  <div v-if="effectInfo(selectedEffect.type).adapt" class="notice-adapt">
+    Periodic adaptation: Viscera’s eight-partial mapping is redistributed into harmonic bins. It does not reproduce free-running inharmonic playback.
+  </div>
+  <div class="inspect-actions pad-top">
+    <button class="small" @click="moveEffect(-1)" :disabled="selectedEffectIndex===0">
+      ↑
+    </button>
+    <button class="small" @click="moveEffect(1)" :disabled="selectedEffectIndex===effects.length-1">
+      ↓
+    </button>
+    <button class="small" @click="duplicateEffect" :disabled="effects.length>=16">
+      Duplicate
+    </button>
+    <button class="small danger" @click="removeEffect(selectedEffect.id)">
+      Remove
+    </button>
+  </div>
+  <p class="quality-note">
+    Reads the previous slot’s output, not the original source.
+  </p>
+</div>
+<div class="inspector-section empty" v-else-if="tab!=='tablefx'">
+  {{tab==='sources'?'Add or select a waveform component.':'Select a chain slot, or add an effect from the library.'}}
+</div>
+<details class="inspector-section inspector-fold" v-if="tab!=='tablefx'" open>
+  <summary>
+    Render & output
+  </summary>
+  <label class="check">
+    <input type="checkbox" v-model="output.removeDC" @change="edit()">
+    Remove DC offset
+  </label>
+  <label class="check">
+    <input type="checkbox" v-model="output.normalize" @change="edit()">
+    Peak normalize after processing
+  </label>
+  <div class="field">
+    <label>
+      Component summing
+    </label>
+    <select v-model="output.mixMode" @change="edit()" aria-label="Component summing" @dblclick.prevent.stop="output.mixMode='weighted';edit()">
+      <option value="weighted">
+        Balanced sum
+      </option>
+      <option value="raw">
+        Raw sum / additive drive
+      </option>
+    </select>
+  </div>
+  <div class="output-grid pad-top">
+    <div>
+      <label>
+        Live quality
+      </label>
+      <select
+        v-model.number="previewQuality"
+        @change="requestRender"
+        aria-label="Live oversampling"
+        @dblclick.prevent.stop="previewQuality=4;requestRender()">
+        <option v-for="q in [2,4,8,16]" :key="q" :value="q">
+          {{q}}×
+        </option>
+      </select>
+    </div>
+    <div>
+      <label>
+        Commit quality
+      </label>
+      <select v-model.number="commitQuality" aria-label="Commit oversampling" @dblclick.prevent.stop="commitQuality=8">
+        <option v-for="q in [2,4,8,16]" :key="q" :value="q">
+          {{q}}×
+        </option>
+      </select>
+    </div>
+  </div>
+  <p class="quality-note">
+    2,048-sample editing preview. Final output: 128–8,192 samples per frame, generated from editable recipes.
+  </p>
+  <control-slider
+    label="Audition pitch"
+    :reset-value="110"
+    :model-value="previewHz"
+    @update:model-value="previewHz=$event;refreshAudio()"
+    :min="30"
+    :max="1000"
+    :step="1"
+    unit="Hz">
+  </control-slider>
+  <control-slider
+    label="Listening level"
+    :reset-value="50"
+    :model-value="volume"
+    @update:model-value="volume=$event;setVolume()"
+    :min="0"
+    :max="100"
+    :step="1"
+    unit="%">
+  </control-slider>
+  <p class="quality-note">
+    Listening controls never change the rendered frame.
+  </p>
+</details>
+<div v-if="inspectorFocus==='frame'&&keyCount&&tab!=='tablefx'" class="inspector-section frame-editor">
+  <h3>
+    Keyframe {{position+1}}
+  </h3>
+  <p class="quality-note">
+    {{currentKey?'Saved waveform and recipe at this position.':'Interpolated position — not committed.'}}
+  </p>
+  <div class="field">
+    <label>
+      Frame position
+    </label>
+    <input
+      type="number"
+      class="full"
+      :value="position+1"
+      min="1"
+      max="256"
+      @change="setPosition(+$event.target.value-1)"
+      aria-label="Focused frame position">
+  </div>
+  <div class="inspect-actions pad-top">
+    <button class="small primary" @click="commit">
+      Commit here
+    </button>
+    <button class="small" @click="loadKey" :disabled="!currentKey">
+      Load to edit
+    </button>
+    <button class="small danger" @click="deleteKey" :disabled="!currentKey">
+      Delete
+    </button>
+  </div>
+  <p class="quality-note">
+    Drag the marker in the timeline to change its stored position. Commit overwrites only the selected position.
+  </p>
+</div>
+<div class="inspector-section">
+  <button class="full quiet" @click="initialize" :disabled="committing||finalBuilding">
+    ↺ Initialize working settings
+  </button>
+  <p class="quality-note">
+    One clean sine, no effects. Keeps all {{keyCount}} committed frames and the destination position.
+  </p>
+</div>

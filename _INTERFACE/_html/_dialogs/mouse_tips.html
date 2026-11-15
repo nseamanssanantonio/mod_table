@@ -1,0 +1,14 @@
+<!-- mouse tips -->
+<div
+  class="mouse-tip"
+  :class="{below:!hoverTip.above}"
+  v-if="tipsEnabled&&hoverTip.on"
+  :style="{left:hoverTip.x+'px',top:hoverTip.y+'px'}"
+  role="tooltip">
+  <strong>
+    {{hoverTip.title}}
+  </strong>
+  <span>
+    {{hoverTip.text}}
+  </span>
+</div>

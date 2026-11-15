@@ -1,0 +1,79 @@
+<!-- wave browser -->
+<div class="ui-dialog-backdrop" v-if="pickerOpen" @click.self="pickerOpen=false" @keydown.esc.stop.prevent="pickerOpen=false">
+  <section class="ui-dialog ui-picker" role="dialog" aria-modal="true" aria-labelledby="ui-picker-title">
+    <header class="ui-dialog-head">
+      <div>
+        <h2 id="ui-picker-title">
+          Waveform & modifier browser
+        </h2>
+        <p>
+          Search all types; star favorites for quick access.
+        </p>
+      </div>
+      <button class="icon quiet" @click="pickerOpen=false" aria-label="Close browser">
+        ×
+      </button>
+    </header>
+    <div class="ui-dialog-tools">
+      <div class="segmented">
+        <button :class="{active:pickerKind==='wave'}" @click="pickerKind='wave'">
+          Waveforms
+        </button>
+        <button :class="{active:pickerKind==='effect'}" @click="pickerKind='effect'">
+          Modifiers
+        </button>
+      </div>
+      <input class="search" v-model="pickerSearch" type="search" placeholder="Search names, families, effects…" aria-label="Search waveform or modifier">
+    </div>
+    <div class="ui-picker-list" v-if="pickerKind==='wave'">
+      <div class="picker-row" v-for="w in filteredWaveChoices" :key="w.code">
+        <button class="fav-star" :class="{isfav:waveFavorites.includes(w.code)}" :aria-label="'Favorite '+w.label" @click="toggleFavorite('wave',w.code)">
+          {{waveFavorites.includes(w.code)?'★':'☆'}}
+        </button>
+        <div class="picker-title">
+          <strong>
+            {{w.label}}
+          </strong>
+          <small>
+            {{w.familyLabel}}
+          </small>
+        </div>
+        <button class="small primary" @click="choosePickerWave(w)">
+          Use wave
+        </button>
+      </div>
+      <p v-if="!filteredWaveChoices.length" class="empty">
+        No waveform matches.
+      </p>
+    </div>
+    <div class="ui-picker-list" v-else>
+      <div class="picker-row" v-for="fx in filteredEffectChoices" :key="fx.id">
+        <button class="fav-star" :class="{isfav:effectFavorites.includes(fx.id)}" :aria-label="'Favorite '+fx.name" @click="toggleFavorite('effect',fx.id)">
+          {{effectFavorites.includes(fx.id)?'★':'☆'}}
+        </button>
+        <div class="picker-title">
+          <strong>
+            {{fx.name}}
+          </strong>
+          <small>
+            {{fx.category}} · {{fx.description}}
+          </small>
+        </div>
+        <button class="small primary" :disabled="effects.length>=16" @click="choosePickerEffect(fx)">
+          Add effect
+        </button>
+      </div>
+      <p v-if="!filteredEffectChoices.length" class="empty">
+        No processor matches.
+      </p>
+    </div>
+    <footer class="ui-dialog-footer">
+      <span>
+        Favorites are saved in this browser when local storage is available.
+      </span>
+      <button @click="pickerOpen=false">
+        Close
+      </button>
+    </footer>
+  </section>
+</div>

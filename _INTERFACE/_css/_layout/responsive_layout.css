@@ -1,0 +1,39 @@
+/*
+ * Smaller-window, laptop, and mobile layout rules.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* Narrow displays keep vertical document scrolling instead of compressing sliders into unusable targets. */
+
+@media (max-width:999px), (max-height:679px) {
+    html,body {
+        height: auto;
+        overflow: auto;
+    }
+    .center {
+        display: flex;
+    }
+    .viewer-panel .canvas-shell {
+        height: 285px;
+        flex: none;
+    }
+    .stack-scroll,.effect-library {
+        scrollbar-width: thin;
+    }
+    .inspector {
+        overflow: visible;
+    }
+}
+
+@media (min-width:761px) and (max-width:999px) {
+    .source-panel .stack-scroll {
+        max-height: 390px;
+    }
+    .inspector {
+        display: block;
+    }
+    .inspector .panel-head {
+        position: static;
+    }
+}

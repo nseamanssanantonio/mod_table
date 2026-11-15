@@ -1,0 +1,12 @@
+<!-- Reusable numeric field and slider. The build loads this into its Vue component. -->
+<div class="control-slider" :data-tip="help || (label+' changes the working waveform or render setting. Double-click resets it; Shift+drag adjusts finely.')" :data-tip-title="label" :data-tip-custom="help?'true':'false'">
+<div class="slider-top">
+<label>{{label}}</label>
+<div class="number-wrap">
+<input type="number" :min="min" :max="max" :step="step" :value="Math.round(modelValue*100)/100" @change="update($event.target.value)" :aria-label="label+' value'" @dblclick.prevent.stop="reset" title="Double-click to reset to default">
+<span>{{unit}}</span>
+</div>
+</div>
+<input type="range" :min="min" :max="max" :step="step" :value="modelValue" @input="update($event.target.value)" :aria-label="label" @pointerdown.stop="startFine" @pointermove="moveFine" @pointerup="endFine" @pointercancel="endFine" @dblclick.prevent.stop="reset" title="Drag to adjust; Shift+drag for finer adjustment; double-click to reset">
+<p v-if="help" class="slider-help">{{help}}</p>
+</div>

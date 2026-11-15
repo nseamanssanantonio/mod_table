@@ -1,0 +1,79 @@
+/*
+ * Wave region, harmonic interval, and local shaper controls.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* Mod Table 0.5: harmonic interval and per-source phase-region editor. */
+
+.ratio-panel,.region-controls {
+    border: 1px solid #3b5966;
+    border-radius: 11px;
+    padding: 12px;
+    margin-top: 16px;
+    background: #172b36;
+}
+
+.ratio-panel h3,.region-controls h3 {
+    font-size: 12px;
+    color: #dcf3f0;
+}
+
+.ratio-panel .check {
+    margin: 0;
+}
+
+.ratio-numbers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 9px;
+    color: var(--teal);
+}
+
+.ratio-numbers label {
+    margin-right: auto;
+}
+
+.ratio-numbers input {
+    width: 110px;
+    min-height: 37px;
+    padding: 6px 8px;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: right;
+    color: var(--teal);
+}
+
+.ratio-panel input[type=range] {
+    height: 42px;
+}
+
+.region-visual {
+    height: 18px;
+    background: repeating-linear-gradient(90deg,#203c49 0,#203c49 9.9%,#405965 10%);
+    border: 1px solid #527280;
+    position: relative;
+    margin: 13px 0 6px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.region-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,#54e0ce99,#8cdbedbb);
+    border-left: 2px solid #d4fff4;
+    border-right: 2px solid #d4fff4;
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+.region-controls .control-slider {
+    margin-top: 10px;
+}
+
+.source-foot input[type=range] {
+    height: 30px;
+}

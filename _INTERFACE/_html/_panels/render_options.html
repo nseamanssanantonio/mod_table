@@ -1,0 +1,270 @@
+<!-- render options -->
+<template v-else-if="tab==='tablefx'">
+  <div class="panel-head">
+    <h2>
+      Finish & render
+    </h2>
+    <span class="count">
+      0.8.1
+    </span>
+  </div>
+  <div class="finish-scroll">
+    <div class="finish-section">
+      <p class="finish-pipeline">
+        KEYFRAMES → MORPHS → FILTER → WAV
+      </p>
+      <p class="muted">
+        One final pass across every output frame. Source keyframes stay untouched.
+      </p>
+    </div>
+    <div class="finish-section finish-settings">
+      <h3>
+        Table dimensions
+      </h3>
+      <div class="output-grid pad-top">
+        <div>
+          <label>
+            Samples per frame
+          </label>
+          <select
+            v-model.number="samplesPerFrame"
+            @change="finishChanged"
+            @dblclick.prevent.stop="samplesPerFrame=2048;finishChanged()"
+            aria-label="Output samples per frame">
+            <option v-for="n in MT_FRAME_SIZES" :value="n">
+              {{n.toLocaleString()}}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label>
+            Rendered frames
+          </label>
+          <input
+            class="full finish-number"
+            type="number"
+            min="2"
+            max="256"
+            v-model.number="renderFrames"
+            @change="finishChanged"
+            @dblclick.prevent.stop="renderFrames=256;finishChanged()"
+            aria-label="Output frame count">
+        </div>
+      </div>
+      <p class="quality-note">
+        {{keyCount}} saved keyframes → {{renderFrames}} frames × {{samplesPerFrame.toLocaleString()}} samples. Maximum 256 frames, not 8,192 frames.
+      </p>
+    </div>
+    <div class="finish-section finish-settings">
+      <h3>
+        Rendering quality
+      </h3>
+      <div class="field">
+        <select
+          v-model="renderOptions.mode"
+          @change="finishChanged"
+          aria-label="Final render mode"
+          @dblclick.prevent.stop="renderOptions.mode='standard';finishChanged()">
+          <option value="standard">
+            Standard · fixed oversampling
+          </option>
+          <option value="deep">
+            Deep scan · adaptive 8×–64×
+          </option>
+        </select>
+      </div>
+      <div v-if="renderOptions.mode==='standard'" class="field">
+        <label>
+          Oversampling
+        </label>
+        <select v-model.number="renderOptions.quality" @change="finishChanged" aria-label="Final oversampling">
+          <option v-for="q in [2,4,8,16]" :value="q">
+            {{q}}×
+          </option>
+        </select>
+      </div>
+      <template v-else>
+        <div class="output-grid pad-top">
+          <div>
+            <label>
+              Quality ceiling
+            </label>
+            <select v-model.number="renderOptions.maxQuality" @change="finishChanged" aria-label="Deep scan maximum oversampling">
+              <option v-for="q in [16,32,64]" :value="q">
+                {{q}}×
+              </option>
+            </select>
+          </div>
+          <div>
+            <label>
+              Convergence target
+            </label>
+            <select v-model.number="renderOptions.tolerance" @change="finishChanged" aria-label="Deep scan tolerance">
+              <option :value="-60">
+                −60 dB
+              </option>
+              <option :value="-72">
+                −72 dB
+              </option>
+              <option :value="-84">
+                −84 dB
+              </option>
+            </select>
+          </div>
+        </div>
+        <p class="quality-note">
+          Compares progressively oversampled renders of source recipes, transitions and drive. Keeps the finest result if the target is not met. This measures convergence—not a guaranteed alias floor.
+        </p>
+      </template>
+      <label class="check">
+        <input type="checkbox" v-model="renderOptions.regenerate" @change="finishChanged">
+        Re-render editable source recipes
+      </label>
+      <p class="quality-note">
+        On: generate real detail at the output resolution. Off: preserve and resample stored cycles; missing detail and existing aliasing cannot be recovered.
+      </p>
+    </div>
+    <div class="finish-section finish-settings">
+      <h3>
+        Final level & cleanup
+      </h3>
+      <label class="check">
+        <input type="checkbox" v-model="finish.removeDC" @change="finishChanged">
+        Remove DC offset
+      </label>
+      <div class="hint">
+        WAV export
+        <b>
+          always normalizes the highest absolute peak of the entire table to 0 dBFS
+        </b>
+        using one common gain. Quiet and loud frames retain their relative levels. A completely silent table stays silent.
+      </div>
+      <label class="quality-note" for="frame-level-balance">
+        Optional frame balancing before global normalization
+      </label>
+      <select id="frame-level-balance" v-model="finish.level" @change="finishChanged" aria-label="Frame level balancing">
+        <option value="safety">
+          Preserve relative frame levels (default)
+        </option>
+        <option value="none">
+          Preserve source gain and relative frame levels
+        </option>
+        <option value="peak">
+          One whole-table gain before final normalization
+        </option>
+        <option value="rms">
+          RMS match individual frames before normalization
+        </option>
+      </select>
+      <control-slider
+        label="Pre-normalization safety ceiling"
+        :reset-value="-1"
+        :model-value="finish.ceiling"
+        @update:model-value="finish.ceiling=$event;finishChanged()"
+        :min="-12"
+        :max="0"
+        :step=".1"
+        unit="dBFS">
+      </control-slider>
+      <details>
+        <summary>
+          Optional playback band limit
+        </summary>
+        <label class="check">
+          <input type="checkbox" v-model="finish.pitchLimit" @change="finishChanged">
+          Limit harmonics for a highest pitch
+        </label>
+        <control-slider
+          label="Highest playback frequency"
+          :reset-value="1000"
+          :model-value="finish.maxHz"
+          @update:model-value="finish.maxHz=$event;finishChanged()"
+          :min="30"
+          :max="10000"
+          :step="1"
+          unit="Hz">
+        </control-slider>
+        <select v-model.number="finish.sampleRate" @change="finishChanged" aria-label="Target playback sample rate">
+          <option v-for="r in [44100,48000,96000]" :value="r">
+            {{r.toLocaleString()}} Hz playback
+          </option>
+        </select>
+        <p class="quality-note">
+          Deliberately removes upper harmonics and changes brightness. Normally leave off; let the destination synth handle pitch-dependent band-limiting.
+        </p>
+      </details>
+    </div>
+    <div v-if="renderReport" class="finish-section render-report">
+      <div class="row between">
+        <h3>
+          Render report
+        </h3>
+        <span class="pill" :class="renderReport.unconverged?'warn':'good'">
+          {{renderReport.unconverged?'Review':'Complete'}}
+        </span>
+      </div>
+      <div class="report-stats">
+        <span>
+          {{renderReport.maximumOversampling}}×
+          <small>
+            maximum
+          </small>
+        </span>
+        <span>
+          {{renderReport.comparisonPasses}}
+          <small>
+            comparisons
+          </small>
+        </span>
+        <span>
+          {{(renderReport.elapsedMs/1000).toFixed(2)}}s
+          <small>
+            render time
+          </small>
+        </span>
+      </div>
+      <p v-if="renderReport.worstResidualDb!==null" class="quality-note">
+        Worst successive-render difference: {{renderReport.worstResidualDb.toFixed(1)}} dB. {{renderReport.unconverged}} scans reached the ceiling.
+      </p>
+      <p class="quality-note">
+        Export peak {{renderReport.finalPeak.toFixed(4)}} ({{renderReport.exportPeakNormalized?'0 dBFS':'silent'}}) · global gain {{renderReport.gainDb.toFixed(2)}} dB.
+      </p>
+      <details>
+        <summary>
+          Limits & warnings
+        </summary>
+        <p v-for="w in renderReport.warnings" class="quality-note">
+          {{w}}
+        </p>
+      </details>
+      <button class="small full pad-top" @click="downloadReport">
+        Save render report
+      </button>
+    </div>
+  </div>
+  <div class="finish-actions">
+    <div v-if="finalBuilding" class="render-progress" role="status">
+      <div class="progress-track">
+        <i :style="{width:renderProgress+'%'}">
+        </i>
+      </div>
+      <span>
+        {{renderProgress}}% · {{renderStage}}
+      </span>
+    </div>
+    <button v-if="finalBuilding" class="full danger" @click="cancelFinal">
+      Cancel render
+    </button>
+    <template v-else>
+      <button class="primary full" :disabled="!keyCount||committing" @click="buildFinal(false)">
+        Render finished table
+      </button>
+      <button class="full small pad-top" :disabled="!keyCount||committing" @click="exportTable">
+        Render & export WAV
+      </button>
+    </template>
+    <p class="quality-note">
+      Preview uses the exact globally peak-normalized table that is exported to WAV.
+    </p>
+  </div>
+</template>

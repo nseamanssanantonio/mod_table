@@ -1,0 +1,256 @@
+/*
+ * Final table filtering, Deep Scan and render progress.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* 0.8 — compact, independently scrolling non-destructive table finish. */
+
+.finish-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #527482 #152a36;
+}
+
+.finish-section {
+    padding: 10px 11px;
+    border-bottom: 1px solid var(--border);
+}
+
+.finish-section h3 {
+    font-size: 12px;
+}
+
+.finish-section>.muted {
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.finish-pipeline {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    color: var(--teal);
+    margin-bottom: 5px;
+}
+
+.finish-section select {
+    height: 31px;
+    font-size: 11px;
+    padding: 3px 7px;
+}
+
+.finish-number {
+    padding: 5px 8px;
+    height: 31px;
+    font-size: 12px;
+}
+
+.finish-section .field {
+    margin-top: 8px;
+}
+
+.finish-section .control-slider {
+    margin-top: 8px;
+}
+
+.finish-section details {
+    margin-top: 10px;
+    font-size: 10px;
+}
+
+.finish-section summary {
+    cursor: pointer;
+    color: var(--purple);
+    font-weight: 600;
+}
+
+.finish-actions {
+    flex: 0 0 auto;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: #142a34;
+}
+
+.finish-actions button {
+    font-size: 11px;
+    min-height: 30px;
+}
+
+.render-progress {
+    font-size: 10px;
+    margin-bottom: 9px;
+    color: var(--teal);
+}
+
+.progress-track {
+    height: 5px;
+    background: #2b444c;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-track i {
+    height: 100%;
+    background: var(--teal);
+    display: block;
+}
+
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 7px;
+    margin: 10px 0;
+}
+
+.report-stats span {
+    color: var(--teal);
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.report-stats small {
+    display: block;
+    font-size: 9px;
+    font-weight: 400;
+}
+
+.filter-response {
+    display: block;
+    height: 100px;
+    width: 100%;
+    margin: 8px 0;
+    background: #10232d;
+    border: 1px solid #334d56;
+    border-radius: 7px;
+}
+
+.filter-response text {
+    fill: var(--sub);
+    font-size: 8px;
+}
+
+.filter-timeline {
+    position: relative;
+    margin: 16px 8px 5px;
+    height: 29px;
+    background: #112c36;
+    border: 1px solid #44616c;
+    border-radius: 5px;
+    touch-action: none;
+    user-select: none;
+}
+
+.filter-timeline button {
+    position: absolute;
+    top: 3px;
+    transform: translateX(-50%);
+    min-width: 0;
+    min-height: 0;
+    width: 13px;
+    height: 21px;
+    padding: 0;
+    border-radius: 3px;
+    border: 2px solid #1a3440;
+    background: var(--purple);
+    cursor: grab;
+    transition: none;
+    box-shadow: 0 0 0 1px #c4a9e9;
+}
+
+.filter-timeline button.active {
+    background: var(--amber);
+    z-index: 2;
+    box-shadow: 0 0 0 2px #ad8955;
+}
+
+.render-count-control input[type=number] {
+    width: 53px;
+    min-width: 40px;
+    max-height: 26px;
+    padding: 3px;
+    font-size: 11px;
+}
+
+.render-count-control select {
+    width: 77px;
+    min-width: 65px;
+}
+
+.render-count-control button {
+    margin-left: auto;
+    padding: 3px 5px;
+}
+
+.curve-settings {
+    padding: 5px 8px;
+    border: 1px solid #3b5364;
+    border-radius: 8px;
+}
+
+.curve-settings h3 {
+    font-size: 11px;
+}
+
+.curve-settings .control-slider {
+    margin-top: 6px;
+}
+
+.final-busy .finish-settings {
+    opacity: .65;
+    pointer-events: none;
+}
+
+.final-busy .tabs .spacer {
+    color: var(--amber);
+}
+
+@media (min-width:1000px) and (min-height:680px) {
+    .tabs button {
+        min-width: 95px;
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+    .tabs .spacer {
+        font-size: 9px;
+    }
+    .source-panel:has(.finish-scroll) {
+        display: flex;
+        flex-direction: column;
+    }
+    .finish-scroll {
+        max-height: none;
+    }
+    .inspector .filter-response {
+        height: 86px;
+    }
+    .render-count-control {
+        gap: 5px;
+    }
+    .frame-panel .frame-options select {
+        width: 120px;
+    }
+    .finish-section .control-slider input[type=range] {
+        height: 29px;
+    }
+}
+
+@media (max-width:999px),(max-height:679px) {
+    .finish-scroll {
+        max-height: 590px;
+    }
+    .source-panel:has(.finish-scroll) {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-response {
+        height: 100px;
+    }
+    .tabs {
+        overflow: auto;
+    }
+}

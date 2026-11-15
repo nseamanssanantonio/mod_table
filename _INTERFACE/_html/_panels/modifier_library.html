@@ -1,0 +1,56 @@
+<!-- modifier library -->
+<template v-else>
+  <div class="panel-head">
+    <h2>
+      {{tabLabel}} library
+    </h2>
+    <span class="count">
+      {{effects.length}} / 16 slots
+    </span>
+  </div>
+  <div style="padding:10px 10px 0" class="picker-search-row">
+    <input class="search" v-model="search" placeholder="Find a processor…" aria-label="Find a processor">
+    <button class="small" @click="openPicker('effect')">
+      Browse all ★
+    </button>
+  </div>
+  <div class="effect-library">
+    <article v-for="fx in visibleEffects" :key="fx.id" class="effect-card">
+      <h3>
+        {{fx.name}}
+        <button
+          class="fav-star"
+          :aria-label="'Favorite modifier '+fx.name"
+          :class="{isfav:effectFavorites.includes(fx.id)}"
+          @click="toggleFavorite('effect',fx.id)">
+          {{effectFavorites.includes(fx.id)?'★':'☆'}}
+        </button>
+        <span v-if="fx.adapt" class="adapt">
+          PERIODIC
+        </span>
+      </h3>
+      <p>
+        {{fx.description}}
+      </p>
+      <div class="row between">
+        <span class="muted" style="font-size:9px">
+          Viscera · ID {{fx.id}}
+        </span>
+        <button class="add-effect" @click="addEffect(fx.id)" :disabled="effects.length>=16">
+          + Add to chain
+        </button>
+      </div>
+    </article>
+    <p v-if="!visibleEffects.length" class="empty">
+      No matching processors.
+    </p>
+  </div>
+  <div class="hint stack-hint">
+    All three effect tabs share
+    <strong>
+      one ordered chain
+    </strong>
+    . Move a slot to change processing order. Bypass retains its settings.
+  </div>
+</template>
+</aside>

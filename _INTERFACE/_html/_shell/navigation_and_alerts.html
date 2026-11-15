@@ -1,0 +1,18 @@
+<!-- navigation and alerts -->
+<nav class="tabs" aria-label="Wave editor sections">
+  <button v-for="(t,i) in tabs" :key="t.id" :class="{active:tab===t.id}" @click="selectTab(t.id)" :aria-selected="tab===t.id" :aria-label="'0'+(i+1)+t.label" role="tab">
+    <span class="tab-number">
+      0{{i+1}}
+    </span>
+    {{t.label}}
+  </button>
+  <span class="spacer">
+    64 waves · 16 modifiers · 256 keyframes · independent scroll panels
+  </span>
+  <span class="render-status-pill" :class="{rendered:!!renderReport}">
+    {{projectStatus}}
+  </span>
+</nav>
+<div v-if="error" class="banner" role="alert">
+  {{error}}
+</div>

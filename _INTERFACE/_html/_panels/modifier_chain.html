@@ -1,0 +1,53 @@
+<!-- modifier chain -->
+<div class="panel chain-panel">
+  <div class="panel-head">
+    <h2>
+      Serial processing chain
+    </h2>
+    <div class="row">
+      <span class="count">
+        {{effects.length}} / 16
+      </span>
+      <button class="small quiet" :disabled="!effects.length" @click="toggleAllEffects">
+        {{effects.some(e=>e.on)?'Bypass all':'Enable all'}}
+      </button>
+    </div>
+  </div>
+  <div class="chain">
+    <template v-for="i in 16" :key="i">
+      <div
+        v-if="effects[i-1]"
+        class="effect-slot"
+        :class="{selected:selectedEffectId===effects[i-1].id&&tab!=='sources',off:!effects[i-1].on}"
+        @click="selectEffect(effects[i-1]);inspectorFocus='effect'"
+        @contextmenu.stop.prevent="showContext($event,'effect',effects[i-1].id)"
+        data-tip="Modifier slot: processes the cumulative composite after previous slots. Click to inspect; right-click for actions.">
+        <div class="row">
+          <span class="count">
+            {{i}}
+          </span>
+          <button class="icon quiet" @click.stop="effects[i-1].on=!effects[i-1].on;edit()" :aria-label="'Bypass effect '+i">
+            {{effects[i-1].on?'●':'○'}}
+          </button>
+          <span class="effect-order">
+          </span>
+          <button class="icon quiet danger remove-effect" @click.stop="removeEffect(effects[i-1].id)" :aria-label="'Remove effect '+i">
+            ×
+          </button>
+        </div>
+        <div class="effect-name" :title="effectInfo(effects[i-1].type).name">
+          {{effectInfo(effects[i-1].type).name}}
+        </div>
+        <div class="effect-sub">
+          {{Math.round(effects[i-1].shape)}}% shape · {{Math.round(effects[i-1].mix)}}% wet
+        </div>
+      </div>
+      <button v-else class="effect-slot empty-slot" @click="tab='distortion'" :aria-label="'Browse effects for slot '+i">
+        {{i}} · + effect
+      </button>
+    </template>
+  </div>
+  <div class="chain-footer">
+    Source composite → slots 1–16 → DC / level → committed frame. No wavetable-wide warping.
+  </div>
+</div>

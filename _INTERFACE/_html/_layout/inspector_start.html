@@ -1,0 +1,28 @@
+<!-- inspector start -->
+<aside class="panel inspector">
+  <div class="panel-head">
+    <h2>
+      {{focusLabel}}
+    </h2>
+    <button
+      class="small quiet"
+      v-if="tab==='sources'&&selectedSource&&selectedSourceIndex>0"
+      @click="focusObject(inspectorFocus==='relation'?'wave':'relation',selectedSourceId)"
+      data-tip="Switch attention between the selected wave and the relationship that connects it to the wave above.">
+      {{inspectorFocus==='relation'?'Wave controls':'Relation controls'}}
+    </button>
+    <button
+      class="small quiet"
+      v-if="keyCount"
+      @click="focusObject('frame',position)"
+      data-tip="Focus the selected keyframe’s position, load, transition and commit controls.">
+      Frame
+    </button>
+    <button
+      class="small quiet"
+      @click="initialize"
+      :disabled="committing||finalBuilding"
+      title="Reset working sources, effects and output settings. Preserve every committed frame.">
+      Initialize
+    </button>
+  </div>

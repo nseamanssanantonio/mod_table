@@ -1,0 +1,19 @@
+<!-- confirmation -->
+<div class="modal-shade" v-if="dialog" @click.self="dialog=null">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>
+      {{dialog.title}}
+    </h3>
+    <p>
+      {{dialog.text}}
+    </p>
+    <div class="row">
+      <button @click="dialog=null">
+        Cancel
+      </button>
+      <button class="danger" @click="confirmDialog">
+        {{dialog.action}}
+      </button>
+    </div>
+  </div>
+</div>

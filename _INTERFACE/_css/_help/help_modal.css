@@ -1,0 +1,250 @@
+/*
+ * Searchable modal help documentation.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* 0.8.3: Compact offline help and onboarding dialog. */
+
+.help-launch {
+    border-color: #478279;
+    color: #dcfff7;
+    background: #1b494c;
+    min-width: 69px;
+}
+
+.help-launch:hover {
+    background: #286264;
+}
+
+.help-overlay {
+    position: fixed;
+    inset: 0;
+    background: #030a12db;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+
+.help-dialog {
+    width: min(980px,100%);
+    height: min(760px,calc(100dvh - 36px));
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    background: #142532;
+    border: 1px solid #4b6b78;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 25px 90px #000b;
+}
+
+.help-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 12px;
+    padding: 17px 20px 12px;
+    border-bottom: 1px solid #304958;
+}
+
+.help-top h2 {
+    font-size: 17px;
+    letter-spacing: .3px;
+    color: #e7f7f5;
+    text-transform: none;
+}
+
+.help-top p {
+    font-size: 11px;
+    color: #a8c3ca;
+    margin-top: 4px;
+}
+
+.help-close {
+    font-size: 17px;
+    padding: 4px 10px;
+    min-width: 36px;
+    flex-shrink: 0;
+}
+
+.help-tools {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #1b303d;
+    border-bottom: 1px solid #304958;
+}
+
+.help-search {
+    width: 100%;
+    border: 1px solid #4d6c77;
+    background: #10212c;
+    color: #eaf5f6;
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 12px;
+    min-height: 35px;
+}
+
+.help-body {
+    display: grid;
+    grid-template-columns: 210px minmax(0,1fr);
+    min-height: 0;
+    flex: 1;
+}
+
+.help-nav {
+    overflow: auto;
+    padding: 10px;
+    background: #172a37;
+    border-right: 1px solid #324b58;
+    scrollbar-width: thin;
+}
+
+.help-nav button {
+    display: block;
+    text-align: left;
+    width: 100%;
+    min-height: 32px;
+    margin: 1px 0;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: normal;
+    line-height: 1.3;
+    background: transparent;
+    border-color: transparent;
+    color: #b9d0d8;
+}
+
+.help-nav button.active {
+    background: #29535b;
+    border-color: #4b8d8d;
+    color: #e5fffa;
+}
+
+.help-article {
+    padding: 21px 25px;
+    overflow: auto;
+    scrollbar-width: thin;
+    outline-offset: -3px;
+}
+
+.help-eyebrow {
+    font-size: 10px;
+    letter-spacing: 1.3px;
+    color: #7dded0;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.help-article h3 {
+    font-size: 21px;
+    line-height: 1.25;
+    margin: 0 0 9px;
+}
+
+.help-intro {
+    color: #bed3da;
+    font-size: 13px;
+    margin: 0 0 19px;
+    line-height: 1.55;
+}
+
+.help-block {
+    margin: 0 0 19px;
+}
+
+.help-block h4 {
+    color: #d6f3ef;
+    font-size: 12px;
+    margin: 0 0 5px;
+}
+
+.help-block p {
+    color: #b4cad4;
+    font-size: 12px;
+    line-height: 1.65;
+    margin: 0;
+}
+
+.help-tip {
+    border: 1px solid #4a686b;
+    background: #203c46;
+    border-radius: 9px;
+    padding: 11px 13px;
+    font-size: 11px;
+    line-height: 1.55;
+    color: #c5e5e1;
+}
+
+.help-tip strong {
+    color: #79ded2;
+}
+
+.help-empty {
+    padding: 40px 12px;
+    text-align: center;
+    color: #a9c3cb;
+}
+
+.help-bottom {
+    border-top: 1px solid #304958;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.help-bottom span {
+    font-size: 10px;
+    color: #99b7c1;
+}
+
+.help-bottom button {
+    min-height: 32px;
+}
+
+@media (max-width:640px) {
+    .help-overlay {
+        padding: 6px;
+    }
+    .help-dialog {
+        height: calc(100dvh - 12px);
+    }
+    .help-top {
+        padding: 12px;
+    }
+    .help-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 100px minmax(0,1fr);
+    }
+    .help-nav {
+        display: flex;
+        gap: 5px;
+        border-right: 0;
+        border-bottom: 1px solid #324b58;
+        overflow-x: auto;
+        overflow-y: hidden;
+        align-items: center;
+    }
+    .help-nav button {
+        min-width: 120px;
+        max-width: 150px;
+        margin: 0;
+        text-align: center;
+    }
+    .help-article {
+        padding: 14px;
+    }
+    .help-article h3 {
+        font-size: 18px;
+    }
+    .help-bottom span {
+        max-width: 55%;
+    }
+}

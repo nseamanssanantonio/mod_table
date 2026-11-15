@@ -1,0 +1,61 @@
+/*
+ * Browser-audio controls and signal-meter styles.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* 0.4.1: visible audio diagnostics, kept separate from frame/DSP settings. */
+
+.audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.audio-meter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.audio-meter {
+    height: 9px;
+    min-width: 80px;
+    flex: 1;
+    background: #102631;
+    border: 1px solid #345360;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.audio-meter i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg,#75d1c3,#d6c387);
+    transition: width .08s linear;
+}
+
+.audio-db {
+    font-size: 10px;
+    min-width: 68px;
+    text-align: right;
+    color: var(--teal);
+    font-variant-numeric: tabular-nums;
+}
+
+.audio-help {
+    font-size: 11px;
+    color: var(--sub);
+    margin: 9px 0 4px;
+}
+
+.audio-help.warning {
+    color: var(--amber);
+}
+
+.audio-panel small {
+    font-size: 9px;
+}

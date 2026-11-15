@@ -1,0 +1,297 @@
+<!-- wave inspector -->
+<div class="inspector-section source-inspector" v-if="tab==='sources'&&selectedSource" :key="'s'+selectedSource.id">
+  <div class="row between">
+    <h3>
+      Wave {{String(selectedSourceIndex+1).padStart(2,'0')}}
+    </h3>
+    <label class="check" style="margin:0">
+      <input type="checkbox" v-model="selectedSource.on" @change="edit()">
+      Enabled
+    </label>
+  </div>
+  <div class="row pad-top picker-buttons">
+    <button class="small" @click="openPicker('wave')">
+      ⌕ Browse waveform types ★
+    </button>
+    <button class="small quiet" @click="presetsOpen=true;presetKind='wave'">
+      Save wave preset
+    </button>
+  </div>
+  <div class="field">
+    <label>
+      Wave family
+    </label>
+    <select
+      v-model="selectedSource.type"
+      @change="changeFamily(selectedSource)"
+      aria-label="Wave family"
+      @dblclick.prevent.stop="selectedSource.type='sine';changeFamily(selectedSource)">
+      <option v-for="t in waveTypes" :key="t.id" :value="t.id">
+        {{t.label}}
+      </option>
+    </select>
+  </div>
+  <div class="field">
+    <label>
+      Type / circuit character
+    </label>
+    <select
+      v-model="selectedSource.variant"
+      @change="edit()"
+      aria-label="Waveform circuit type"
+      @dblclick.prevent.stop="selectedSource.variant='clean';edit()">
+      <option v-for="v in variantsFor(selectedSource.type)" :key="v.id" :value="v.id">
+        {{v.label}}
+      </option>
+    </select>
+  </div>
+  <p class="quality-note">
+    Waveform types use descriptive names and standalone periodic mathematical models. The source types are approximations, not hardware emulations.
+  </p>
+  <control-slider
+    label="Influence"
+    :reset-value="100"
+    :model-value="selectedSource.influence"
+    @update:model-value="selectedSource.influence=$event;edit()"
+    :min="0"
+    :max="100"
+    :step="0.1"
+    unit="%"
+    help="Contribution to the composite waveform.">
+  </control-slider>
+  <div class="ratio-panel">
+    <div class="row between">
+      <h3>
+        Harmonic ratio
+      </h3>
+      <label class="check">
+        <input type="checkbox" :checked="selectedSource.freeMode" @change="setFreeMode($event)" aria-label="Free mode">
+        Free mode
+      </label>
+    </div>
+    <div class="ratio-numbers">
+      <label for="source-ratio">
+        Ratio
+      </label>
+      <input
+        id="source-ratio"
+        type="number"
+        :min="selectedSource.freeMode?0.125:0.25"
+        max="64"
+        :step="selectedSource.freeMode?'any':0.25"
+        :value="selectedSource.interval"
+        @input="changeInterval($event.target.value)"
+        @change="changeInterval($event.target.value)"
+        @dblclick.prevent.stop="changeInterval(1)"
+        title="Double-click to reset to 1×"
+        aria-label="Harmonic ratio value">
+      <span>
+        ×
+      </span>
+    </div>
+    <input
+      type="range"
+      :min="selectedSource.freeMode?0.125:0.25"
+      max="64"
+      :step="selectedSource.freeMode?0.01:0.25"
+      :value="selectedSource.interval"
+      @input="changeInterval($event.target.value)"
+      aria-label="Harmonic ratio slider"
+      @dblclick.prevent.stop="changeInterval(1)"
+      title="Double-click to reset to 1×"
+      @pointerdown.stop>
+    <p class="quality-note">
+      {{selectedSource.freeMode?'Free: enter any positive ratio from 0.125 to 64.':'Quantized: ¼-step ratios (0.25, 0.50, 0.75, 1.00, … 64).'}} Noninteger ratios are loop-seam blended for a seamless cycle.
+    </p>
+  </div>
+  <control-slider
+    label="Size / symmetry"
+    :reset-value="50"
+    :model-value="selectedSource.size"
+    @update:model-value="selectedSource.size=$event;edit()"
+    :min="5"
+    :max="95"
+    :step="0.1"
+    unit="%"
+    help="Width, skew or plateau geometry, not pitch.">
+  </control-slider>
+  <control-slider
+    label="Phase offset"
+    :reset-value="0"
+    :model-value="selectedSource.phase"
+    @update:model-value="selectedSource.phase=$event;edit()"
+    :min="0"
+    :max="360"
+    :step="0.1"
+    unit="°">
+  </control-slider>
+  <div class="field">
+    <label>
+      Polarity
+    </label>
+    <button
+      class="full"
+      @click="selectedSource.polarity*=-1;edit()"
+      @dblclick.prevent.stop="selectedSource.polarity=1;edit()"
+      title="Double-click to reset polarity to positive">
+      {{selectedSource.polarity===1?'Positive (+)':'Inverted (−)'}}
+    </button>
+  </div>
+  <div class="experimental-controls" v-if="MT_WAVES[selectedSource.type]">
+    <span class="adapt">
+      EXPERIMENTAL · DETERMINISTIC
+    </span>
+    <control-slider
+      v-if="selectedSource.type==='harmonic'||selectedSource.type==='texture'||['staircase','window_sync','elastic','phase_fold','multi_pulse','fractured'].includes(selectedSource.variant)"
+      label="Detail / partials"
+      :reset-value="8"
+      :model-value="selectedSource.detail"
+      @update:model-value="selectedSource.detail=$event;edit()"
+      :min="2"
+      :max="32"
+      :step="1"
+      unit="">
+    </control-slider>
+    <control-slider
+      v-if="['asymmetric_plateau','spiral','gaussian','comb','clusters','knot','diode','fractured','cellular','chaos'].includes(selectedSource.variant)"
+      label="Character"
+      :reset-value="50"
+      :model-value="selectedSource.character"
+      @update:model-value="selectedSource.character=$event;edit()"
+      :min="0"
+      :max="100"
+      :step="0.5"
+      unit="%">
+    </control-slider>
+    <div class="field" v-if="selectedSource.type==='texture'&&selectedSource.variant!=='fractal'&&selectedSource.variant!=='wavelet'">
+      <label>
+        Repeatable seed
+      </label>
+      <input
+        type="number"
+        v-model.number="selectedSource.seed"
+        min="0"
+        max="1000000"
+        @change="selectedSource.seed=Math.max(0,Math.min(1000000,Math.round(Number.isFinite(selectedSource.seed)?selectedSource.seed:1)));edit()"
+        @dblclick.prevent.stop="selectedSource.seed=1;edit()"
+        aria-label="Wave pattern seed">
+    </div>
+  </div>
+  <p class="quality-note reset-help">
+    Double-click sliders or value fields to restore their defaults. Committed frames are never changed.
+  </p>
+  <details class="region-controls" open>
+    <summary>
+      Active area · single cycle
+    </summary>
+    <p class="quality-note">
+      Shape only the selected portion of the output cycle. Example: start 12%, end 25%.
+    </p>
+    <div class="region-visual" role="img" :aria-label="'Selected region from '+selectedSource.regionStart+' to '+selectedSource.regionEnd+' percent'">
+      <span class="region-highlight" :style="{left:selectedSource.regionStart+'%',width:(selectedSource.regionEnd-selectedSource.regionStart)+'%'}">
+      </span>
+    </div>
+    <control-slider
+      label="Start point"
+      :reset-value="0"
+      :model-value="selectedSource.regionStart"
+      @update:model-value="setRegion('start',$event)"
+      :min="0"
+      :max="Math.max(0,selectedSource.regionEnd-.5)"
+      :step="0.5"
+      unit="%">
+    </control-slider>
+    <control-slider
+      label="End point"
+      :reset-value="100"
+      :model-value="selectedSource.regionEnd"
+      @update:model-value="setRegion('end',$event)"
+      :min="Math.min(100,selectedSource.regionStart+.5)"
+      :max="100"
+      :step="0.5"
+      unit="%">
+    </control-slider>
+    <control-slider
+      label="Blend in"
+      :reset-value="0"
+      :model-value="selectedSource.fadeIn"
+      @update:model-value="selectedSource.fadeIn=$event;edit()"
+      :min="0"
+      :max="50"
+      :step="0.5"
+      unit="%"
+      help="Fade length as a percentage of the selected region.">
+    </control-slider>
+    <control-slider
+      label="Blend out"
+      :reset-value="0"
+      :model-value="selectedSource.fadeOut"
+      @update:model-value="selectedSource.fadeOut=$event;edit()"
+      :min="0"
+      :max="50"
+      :step="0.5"
+      unit="%">
+    </control-slider>
+    <h3 style="margin-top:15px">
+      Local shape blend
+    </h3>
+    <p class="quality-note">
+      Each amount is independent and only affects this wave inside its region, before the shared Viscera chain.
+    </p>
+    <control-slider
+      label="Smooth"
+      :reset-value="0"
+      :model-value="selectedSource.smooth"
+      @update:model-value="selectedSource.smooth=$event;edit()"
+      :min="0"
+      :max="100"
+      :step="0.5"
+      unit="%"
+      help="Soften local corners with neighbor-weighted smoothing.">
+    </control-slider>
+    <control-slider
+      label="Resonance"
+      :reset-value="0"
+      :model-value="selectedSource.resonance"
+      @update:model-value="selectedSource.resonance=$event;edit()"
+      :min="0"
+      :max="100"
+      :step="0.5"
+      unit="%"
+      help="Add a phase-locked harmonic accent. This is a lightweight region shaper, not the modeled Viscera filter.">
+    </control-slider>
+    <control-slider
+      label="Rough"
+      :reset-value="0"
+      :model-value="selectedSource.rough"
+      @update:model-value="selectedSource.rough=$event;edit()"
+      :min="0"
+      :max="100"
+      :step="0.5"
+      unit="%"
+      help="Mix in brighter nonlinear folding.">
+    </control-slider>
+    <control-slider
+      label="Crushed"
+      :reset-value="0"
+      :model-value="selectedSource.crushed"
+      @update:model-value="selectedSource.crushed=$event;edit()"
+      :min="0"
+      :max="100"
+      :step="0.5"
+      unit="%"
+      help="Blend quantized steps into this component.">
+    </control-slider>
+  </details>
+  <div class="inspect-actions pad-top">
+    <button class="small" @click="moveSource(-1)" :disabled="selectedSourceIndex===0">
+      ↑
+    </button>
+    <button class="small" @click="moveSource(1)" :disabled="selectedSourceIndex===sources.length-1">
+      ↓
+    </button>
+    <button class="small danger" @click="removeSource(selectedSource.id)">
+      Remove
+    </button>
+  </div>
+</div>

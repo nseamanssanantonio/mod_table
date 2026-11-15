@@ -1,0 +1,239 @@
+<!-- table filter inspector -->
+<template v-if="tab==='tablefx'">
+  <div class="inspector-section filter-inspector">
+    <div class="row between">
+      <h3>
+        Final filter
+      </h3>
+      <label class="check">
+        <input type="checkbox" v-model="finish.enabled" @change="finishChanged" aria-label="Enable final filter">
+        Enabled
+      </label>
+    </div>
+    <p class="quality-note">
+      Applied after interpolation to every frame. Not a live synth filter.
+    </p>
+    <div class="field">
+      <select v-model="finish.type" @change="finishChanged" aria-label="Final filter type" @dblclick.prevent.stop="finish.type='lp24';finishChanged()">
+        <option v-for="f in MT_FILTERS" :value="f.id">
+          {{f.label}}
+        </option>
+      </select>
+    </div>
+    <svg class="filter-response" viewBox="0 0 260 100" role="img" aria-label="Filter frequency response">
+      <path d="M8 50H252 M8 84H252 M8 16H252" stroke="#3c555d" fill="none"/>
+      <path :d="filterResponsePath" stroke="var(--teal)" stroke-width="2" fill="none"/>
+      <text x="8" y="97">
+        1st harmonic
+      </text>
+      <text x="192" y="97">
+        4,095th
+      </text>
+    </svg>
+    <div class="segmented">
+      <button :class="{active:finish.motion==='static'}" @click="finish.motion='static';finishChanged()">
+        Static across table
+      </button>
+      <button :class="{active:finish.motion==='evolving'}" @click="finish.motion='evolving';finishChanged()">
+        Evolving
+      </button>
+    </div>
+  </div>
+  <div v-if="finish.motion==='evolving'" class="inspector-section">
+    <h3>
+      Filter automation
+    </h3>
+    <div
+      class="filter-timeline"
+      @pointermove="filterPointerMove"
+      @pointerup="filterPointerUp"
+      @pointercancel="filterPointerUp"
+      aria-label="Filter automation timeline">
+      <button
+        v-for="node in finish.nodes"
+        :key="node.position"
+        :style="{left:((filterDrag?.original===node.position?filterDrag.to:node.position)/255*100)+'%'}"
+        :class="{active:selectedFilterPosition===node.position}"
+        @pointerdown.stop="filterPointerDown($event,node.position)"
+        @click="selectedFilterPosition=node.position"
+        :aria-label="'Filter point at '+(node.position+1)"
+        :title="'Drag filter point '+(node.position+1)">
+      </button>
+    </div>
+    <div class="row between">
+      <small>
+        1
+      </small>
+      <small>
+        256
+      </small>
+    </div>
+    <div class="row pad-top">
+      <button class="small" @click="addFilterPoint" :disabled="finish.nodes.length>=256">
+        + Add point
+      </button>
+      <button class="small danger" @click="removeFilterPoint" :disabled="finish.nodes.length<=1">
+        Remove
+      </button>
+    </div>
+    <div class="field">
+      <label>
+        Selected automation point
+      </label>
+      <select v-model.number="selectedFilterPosition" @change="finishChanged" aria-label="Selected filter automation point">
+        <option v-for="p in filterPointPositions" :value="p">
+          Frame {{p+1}} · {{(p/255*100).toFixed(1)}}%
+        </option>
+      </select>
+    </div>
+    <control-slider
+      label="Filter point position"
+      :reset-value="1"
+      :model-value="selectedFilterPosition+1"
+      @update:model-value="setFilterNodePosition($event-1)"
+      :min="1"
+      :max="256"
+      :step="1"
+      unit="frame">
+    </control-slider>
+    <div class="field">
+      <label>
+        Filter progression
+      </label>
+      <select v-model="finish.curve" @change="finishChanged" aria-label="Filter automation curve">
+        <option v-for="c in MT_CURVES" :value="c.id">
+          {{c.label}}
+        </option>
+      </select>
+    </div>
+    <p class="quality-note">
+      Cutoff and Q interpolate logarithmically. Drive, mix and morph follow this curve. These points are separate from source keyframes.
+    </p>
+  </div>
+  <div class="inspector-section finish-settings">
+    <div class="row between">
+      <h3>
+        {{finish.motion==='evolving'?'At frame '+(selectedFilterPosition+1):'Filter settings'}}
+      </h3>
+      <span class="count">
+        {{finish.enabled?'On':'Bypassed'}}
+      </span>
+    </div>
+    <div class="field">
+      <div class="slider-top">
+        <label>
+          Cutoff / center · harmonic
+        </label>
+        <span class="number-wrap">
+          <input
+            type="number"
+            min=".25"
+            max="4095"
+            step=".25"
+            v-model.number="selectedFilter.cutoff"
+            @change="selectedFilter.cutoff=Math.max(.25,Math.min(4095,selectedFilter.cutoff||16));finishChanged()"
+            @dblclick.prevent.stop="selectedFilter.cutoff=16;finishChanged()"
+            aria-label="Filter cutoff harmonic value">
+        </span>
+      </div>
+      <input
+        type="range"
+        min="-2"
+        max="11.99965"
+        step=".01"
+        :value="cutoffLog"
+        @input="setCutoffLog(+$event.target.value)"
+        @dblclick.prevent.stop="setCutoffLog(4)"
+        aria-label="Filter cutoff harmonic">
+      <p class="quality-note">
+        Harmonic-relative, not a fixed playback frequency. 8 = eight times the played note.
+      </p>
+    </div>
+    <control-slider
+      label="Resonance / Q"
+      :reset-value=".707"
+      :model-value="selectedFilter.q"
+      @update:model-value="selectedFilter.q=$event;finishChanged()"
+      :min=".5"
+      :max="24"
+      :step=".01"
+      unit="Q">
+    </control-slider>
+    <control-slider
+      label="Pre-filter drive"
+      :reset-value="0"
+      :model-value="selectedFilter.drive"
+      @update:model-value="selectedFilter.drive=$event;finishChanged()"
+      :min="0"
+      :max="36"
+      :step=".1"
+      unit="dB">
+    </control-slider>
+    <control-slider
+      label="Filter wet / dry"
+      :reset-value="100"
+      :model-value="selectedFilter.mix"
+      @update:model-value="selectedFilter.mix=$event;finishChanged()"
+      :min="0"
+      :max="100"
+      :step=".1"
+      unit="%">
+    </control-slider>
+    <control-slider
+      v-if="finish.type==='peak'||finish.type.startsWith('z')"
+      label="Resonant peak gain"
+      :reset-value="9"
+      :model-value="selectedFilter.gain"
+      @update:model-value="selectedFilter.gain=$event;finishChanged()"
+      :min="finish.type==='peak'?-24:0"
+      :max="24"
+      :step=".1"
+      unit="dB">
+    </control-slider>
+    <control-slider
+      v-if="finish.type.startsWith('z')"
+      label="Z morph position"
+      :reset-value="0"
+      :model-value="selectedFilter.morph"
+      @update:model-value="selectedFilter.morph=$event;finishChanged()"
+      :min="0"
+      :max="100"
+      :step=".1"
+      unit="%">
+    </control-slider>
+    <p v-if="finish.type.startsWith('z')" class="quality-note">
+      Original stable pole/zero response presets. Not a hardware clone or a port of a Viscera filter model.
+    </p>
+    <button class="small full quiet pad-top" @click="resetFinal">
+      Reset final filter only
+    </button>
+  </div>
+  <div class="inspector-section">
+    <h3>
+      Listening only
+    </h3>
+    <control-slider
+      label="Audition pitch"
+      :reset-value="110"
+      :model-value="previewHz"
+      @update:model-value="previewHz=$event;refreshAudio()"
+      :min="30"
+      :max="1000"
+      :step="1"
+      unit="Hz">
+    </control-slider>
+    <control-slider
+      label="Listening level"
+      :reset-value="50"
+      :model-value="volume"
+      @update:model-value="volume=$event;setVolume()"
+      :min="0"
+      :max="100"
+      :step="1"
+      unit="%">
+    </control-slider>
+    <p class="quality-note">
+      {{previewFinalCached?'Listening to the rendered result.':'Draft table preview. Render to hear final source resolution, deep-scan processing and whole-table gain.'}}
+    </p>
+  </div>
+</template>

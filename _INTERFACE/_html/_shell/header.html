@@ -1,0 +1,71 @@
+<!-- header -->
+<header class="header">
+  <div class="brand">
+    <div class="logo">
+      M
+    </div>
+    <div>
+      <h1>
+        MOD TABLE
+      </h1>
+      <small>
+        WAVE BUILDER → KEYFRAMES → TABLE FINISH
+      </small>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="pill good">
+      <i class="pulsing">
+      </i>
+      {{ ready ? 'Ready' : 'Loading…' }}
+    </span>
+    <button
+      class="small history-button"
+      @click="goHistory(-1)"
+      :disabled="!canUndo||historyBusy"
+      data-tip="Undo your last editing action; grouped slider gestures are one step. Works on keyframes and final settings too.">
+      ↶ Undo
+    </button>
+    <button class="small history-button" @click="goHistory(1)" :disabled="!canRedo||historyBusy" data-tip="Redo an undone change.">
+      ↷ Redo
+    </button>
+    <button
+      class="small"
+      @click="presetsOpen=true"
+      data-tip="Save and restore complete editable recipes, waves, or modifier chains. Export and import portable presets.">
+      Presets
+    </button>
+    <button
+      class="help-launch tips-launch"
+      :class="{active:tipsEnabled}"
+      @click="toggleTips"
+      aria-pressed="tipsEnabled"
+      data-tip="Show an explanation above the mouse pointer when hovering any editing control. Click again to disable.">
+      {{tipsEnabled?'✦ Tips ON':'✦ Tips'}}
+    </button>
+    <button class="help-launch" @click="openHelp" title="Open the Mod Table user guide" aria-haspopup="dialog" aria-controls="mod-table-help">
+      ? Help
+    </button>
+    <button class="quiet" @click="newProject" :disabled="committing||finalBuilding">
+      New
+    </button>
+    <button @click="saveProject">
+      Save project
+    </button>
+    <button @click="openFile" :disabled="committing||finalBuilding">
+      Open project
+    </button>
+    <button
+      class="small quiet"
+      @click="exportOpen=true"
+      data-tip="Inspect waveform dimensions, estimated export size and quality before rendering a wavetable WAV.">
+      Export options
+    </button>
+    <button @click="exportTable" :disabled="!keyCount||exporting||finalBuilding||!ready">
+      {{ exporting ? 'Exporting '+exportProgress+'%' : 'Export WAV' }}
+    </button>
+    <button class="primary" @click="toggleAudio" :disabled="!ready||audioStarting">
+      {{ audioStarting ? 'Starting audio…' : (playbackMode==='audition' && playing && audioContextState==='running' ? '■ Stop audition' : '▶ Audition') }}
+    </button>
+  </div>
+</header>

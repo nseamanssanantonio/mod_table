@@ -1,0 +1,107 @@
+<!-- export dialog -->
+<div class="ui-dialog-backdrop" v-if="exportOpen" @click.self="exportOpen=false" @keydown.esc.stop.prevent="exportOpen=false">
+  <section class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <header class="ui-dialog-head">
+      <div>
+        <h2 id="export-title">
+          Wavetable export options
+        </h2>
+        <p>
+          One finished, globally peak-normalized float32 WAV.
+        </p>
+      </div>
+      <button class="icon quiet" @click="exportOpen=false" aria-label="Close export options">
+        ×
+      </button>
+    </header>
+    <div class="ui-dialog-content">
+      <div class="export-grid">
+        <label>
+          Rendered frames
+          <input class="search" type="number" min="2" max="256" v-model.number="renderFrames" @change="finishChanged()">
+        </label>
+        <label>
+          Samples per frame
+          <select v-model.number="samplesPerFrame" @change="finishChanged()">
+            <option v-for="n in MT_FRAME_SIZES" :value="n">
+              {{n.toLocaleString()}} samples
+            </option>
+          </select>
+        </label>
+        <label>
+          Render mode
+          <select v-model="renderOptions.mode" @change="finishChanged()">
+            <option value="standard">
+              Standard · fast
+            </option>
+            <option value="deep">
+              Deep scan · adaptive
+            </option>
+          </select>
+        </label>
+        <label>
+          Final filter
+          <select v-model="finish.enabled" @change="finishChanged()">
+            <option :value="false">
+              Bypassed
+            </option>
+            <option :value="true">
+              Apply whole-table filter
+            </option>
+          </select>
+        </label>
+      </div>
+      <div class="export-summary">
+        <div>
+          <span>
+            Keyframes
+          </span>
+          <strong>
+            {{keyCount}} / 256
+          </strong>
+        </div>
+        <div>
+          <span>
+            Output samples
+          </span>
+          <strong>
+            {{(renderFrames*samplesPerFrame).toLocaleString()}}
+          </strong>
+        </div>
+        <div>
+          <span>
+            Estimated WAV size
+          </span>
+          <strong>
+            {{exportSize}} MiB
+          </strong>
+        </div>
+        <div>
+          <span>
+            Normalization
+          </span>
+          <strong>
+            Global peak · 0 dBFS
+          </strong>
+        </div>
+      </div>
+      <p class="quality-note">
+        Mono IEEE float32 WAV, contiguous cycles, 44.1 kHz WAV header. Importing synths may require a particular cycle size, sample count or frame count; check your synth’s importer. Render options do not change committed keyframes.
+      </p>
+      <p class="quality-note" v-if="renderReport">
+        Last render: {{renderReport.maximumOversampling}}× maximum, {{renderReport.unconverged}} unresolved scan{{renderReport.unconverged===1?'':'s'}}.
+      </p>
+    </div>
+    <footer class="ui-dialog-footer">
+      <span>
+        {{projectStatus}}
+      </span>
+      <button @click="exportOpen=false">
+        Cancel
+      </button>
+      <button class="primary" :disabled="!keyCount||finalBuilding||exporting||!ready" @click="exportOpen=false;exportTable()">
+        Render & export WAV
+      </button>
+    </footer>
+  </section>
+</div>

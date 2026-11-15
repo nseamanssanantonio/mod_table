@@ -1,0 +1,131 @@
+<!-- relation inspector -->
+<div class="inspector-section relationship-inspector" v-if="tab==='sources'&&selectedSource&&selectedSourceIndex>0">
+  <details open>
+    <summary>
+      <span>
+        Relation from above
+      </span>
+      <label class="check" @click.stop>
+        <input type="checkbox" v-model="selectedSource.relation.on" @change="edit()">
+        Enabled
+      </label>
+    </summary>
+    <p class="quality-note">
+      {{relationInfo(selectedSource).description}}
+    </p>
+    <div class="field">
+      <label>
+        Carrier / left input
+      </label>
+      <select
+        v-model="selectedSource.relation.target"
+        @change="edit()"
+        aria-label="Relation carrier target"
+        @dblclick.prevent.stop="selectedSource.relation.target='stack';edit()">
+        <option value="previous">
+          Previous enabled wave
+        </option>
+        <option value="stack">
+          Accumulated stack above
+        </option>
+      </select>
+    </div>
+    <div class="relation-control-grid">
+      <control-slider
+        label="Depth"
+        :reset-value="50"
+        :model-value="selectedSource.relation.depth"
+        @update:model-value="selectedSource.relation.depth=$event;edit()"
+        :min="0"
+        :max="100"
+        :step="0.1"
+        unit="%"
+        v-if="!['add','subtract','ring','minimum','maximum','abs_difference','difference_squared','vertical','zero_merge','xor','and','or','bit_interleave','bit_shift','bit_rotate','comparator','gate','sample_select','digital_fold','spectral_product','hard_sync'].includes(selectedSource.relation.type)">
+      </control-slider>
+      <control-slider
+        label="Relation blend"
+        :reset-value="100"
+        :model-value="selectedSource.relation.mix"
+        @update:model-value="selectedSource.relation.mix=$event;edit()"
+        :min="0"
+        :max="100"
+        :step="0.1"
+        unit="%">
+      </control-slider>
+      <control-slider
+        v-if="['horizontal','vertical','stitch','reverse','phase_mirror','gate'].includes(selectedSource.relation.type)"
+        label="Split / threshold"
+        :reset-value="50"
+        :model-value="selectedSource.relation.split"
+        @update:model-value="selectedSource.relation.split=$event;edit()"
+        :min="1"
+        :max="99"
+        :step="0.5"
+        unit="%">
+      </control-slider>
+      <control-slider
+        v-if="['xor','and','or','bit_interleave','bit_shift','bit_rotate'].includes(selectedSource.relation.type)"
+        label="Bit depth"
+        :reset-value="12"
+        :model-value="selectedSource.relation.bits"
+        @update:model-value="selectedSource.relation.bits=$event;edit()"
+        :min="4"
+        :max="24"
+        :step="1"
+        unit="bit">
+      </control-slider>
+      <control-slider
+        v-if="['hard_sync','soft_sync','phase_quantize','harmonic_interleave','spectral_rotate','fractal','entangle','resonant_crossfeed','iterative_fold','spectral_repulsion'].includes(selectedSource.relation.type)"
+        label="Complexity"
+        :reset-value="4"
+        :model-value="selectedSource.relation.complexity"
+        @update:model-value="selectedSource.relation.complexity=$event;edit()"
+        :min="1"
+        :max="16"
+        :step="1"
+        unit="">
+      </control-slider>
+    </div>
+    <details class="advanced-settings">
+      <summary>
+        Relation region & polarity
+      </summary>
+      <control-slider
+        label="Relation start"
+        :reset-value="0"
+        :model-value="selectedSource.relation.start"
+        @update:model-value="selectedSource.relation.start=$event;edit()"
+        :min="0"
+        :max="selectedSource.relation.end-.5"
+        :step="0.5"
+        unit="%">
+      </control-slider>
+      <control-slider
+        label="Relation end"
+        :reset-value="100"
+        :model-value="selectedSource.relation.end"
+        @update:model-value="selectedSource.relation.end=$event;edit()"
+        :min="selectedSource.relation.start+.5"
+        :max="100"
+        :step="0.5"
+        unit="%">
+      </control-slider>
+      <control-slider
+        label="Edge blend"
+        :reset-value="0"
+        :model-value="selectedSource.relation.fade"
+        @update:model-value="selectedSource.relation.fade=$event;edit()"
+        :min="0"
+        :max="50"
+        :step="0.5"
+        unit="%">
+      </control-slider>
+      <button class="small" @click="selectedSource.relation.polarity*=-1;edit()" @dblclick.prevent.stop="selectedSource.relation.polarity=1;edit()">
+        {{selectedSource.relation.polarity===1?'Positive relation output':'Inverted relation output'}}
+      </button>
+      <p class="quality-note">
+        Outside this relation region, the carrier is unchanged. This is separate from the component’s own crop.
+      </p>
+    </details>
+  </details>
+</div>

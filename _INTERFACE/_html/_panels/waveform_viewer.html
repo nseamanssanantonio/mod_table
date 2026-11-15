@@ -1,0 +1,163 @@
+<!-- waveform viewer -->
+<div class="panel viewer-panel">
+  <div class="panel-head">
+    <h2>
+      {{mode==='draft'?'Composite waveform':'Committed wavetable'}}
+      <span v-if="dirty&&mode==='draft'" style="color:var(--amber);font-size:8px;margin-left:8px">
+        EDITED
+      </span>
+    </h2>
+    <div class="viewer-tools">
+      <button
+        class="viewer-direct"
+        :class="{active:directEdit}"
+        @click="directEdit=!directEdit;setView('wave');setMode('draft')"
+        data-tip="Direct edit mode: drag the selected wave’s two region boundaries, phase and influence using handles over the waveform. Hold Shift for precision.">
+        {{directEdit?'✓ Direct edit':'✥ Direct edit'}}
+      </button>
+      <button v-for="v in views" :key="v.id" :class="{active:view===v.id}" @click="setView(v.id)">
+        {{v.label}}
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="canvas-shell">
+      <canvas id="waveCanvas" aria-label="Composite waveform visualization">
+      </canvas>
+      <div
+        v-if="directEdit&&mode==='draft'&&selectedSource&&view==='wave'"
+        class="direct-editor-overlay"
+        @pointermove="directMove"
+        @pointerup="directUp"
+        @pointercancel="directUp"
+        data-tip="Direct manipulation: drag the region edges horizontally, the influence handle vertically, or the phase handle horizontally. Hold Shift to slow movement.">
+        <div
+          class="direct-region"
+          :style="{left:(6+88*selectedSource.regionStart/100)+'%',width:(88*(selectedSource.regionEnd-selectedSource.regionStart)/100)+'%'}">
+        </div>
+        <button
+          class="direct-handle direct-start"
+          :style="{left:(6+88*selectedSource.regionStart/100)+'%'}"
+          @pointerdown="directDown($event,'start')"
+          data-tip="Drag horizontally to set the selected wave’s active region START in the single cycle.">
+          ◀
+        </button>
+        <button
+          class="direct-handle direct-end"
+          :style="{left:(6+88*selectedSource.regionEnd/100)+'%'}"
+          @pointerdown="directDown($event,'end')"
+          data-tip="Drag horizontally to set the selected wave’s active region END in the single cycle.">
+          ▶
+        </button>
+        <button
+          class="direct-handle direct-influence"
+          :style="{left:'52%',top:(70-selectedSource.influence*.4)+'%'}"
+          @pointerdown="directDown($event,'influence')"
+          data-tip="Drag this handle vertically to change the selected wave’s INFLUENCE in the mix.">
+          {{Math.round(selectedSource.influence)}}%
+        </button>
+        <button
+          class="direct-handle direct-phase"
+          :style="{left:(6+88*selectedSource.phase/360)+'%'}"
+          @pointerdown="directDown($event,'phase')"
+          data-tip="Drag horizontally to change the selected wave’s phase offset within the cycle.">
+          ◆
+        </button>
+      </div>
+      <div class="canvas-caption">
+        {{mode==='draft'?'WORKING WAVE · ONE CYCLE':'WAVETABLE · PREVIEW FRAME '+(Math.round(previewPosition)+1)+' / 256'}}
+      </div>
+      <div class="canvas-bottom">
+        <span>
+          {{view==='spectrum'?'HARMONICS 1–128':view==='table'?'WAVETABLE MORPH · '+renderFrames+' RENDER FRAMES':'0° / 0.0 CYCLE'}}
+        </span>
+        <span>
+          {{view==='wave'?'360° / 1.0 CYCLE':''}}
+        </span>
+      </div>
+    </div>
+    <div class="legend">
+      <span>
+        Processed
+      </span>
+      <span class="dry" v-if="mode==='draft'">
+        Before effects
+      </span>
+      <span class="stored" v-if="currentKey&&mode==='draft'">
+        Committed
+      </span>
+      <span v-if="compareReady&&compareOverlay" class="reference-legend">
+        A reference
+      </span>
+      <small style="margin-left:auto">
+        {{mode==='table'?(previewFinalCached?'FINAL RENDER':'DRAFT TABLE'):(rendering?'Rendering…':renderMs.toFixed(1)+' ms · '+displayQuality+'×')}}
+      </small>
+    </div>
+    <div class="ab-compare-row">
+      <span class="ab-label">
+        A/B COMPARISON
+      </span>
+      <button
+        class="small"
+        @click="saveCompare"
+        data-tip="Capture the displayed single-cycle wave as reference A. Subsequent changes create comparison B without overwriting any committed frame.">
+        {{compareReady?'↺ Recapture A':'+ Capture A'}}
+      </button>
+      <button
+        class="small"
+        :class="{active:compareListen==='A'}"
+        :disabled="!compareReady"
+        @click="switchCompare('A')"
+        data-tip="Audition the captured reference A when playing the working wave. No project settings are modified.">
+        Listen A
+      </button>
+      <button class="small" :class="{active:compareListen==='B'}" @click="switchCompare('B')" data-tip="Audition the current working waveform B.">
+        Listen B
+      </button>
+      <label class="check">
+        <input type="checkbox" v-model="compareOverlay" :disabled="!compareReady">
+        Overlay A
+      </label>
+      <button class="small quiet" @click="clearCompare" :disabled="!compareReady">
+        Clear
+      </button>
+    </div>
+    <div class="metrics">
+      <div class="metric">
+        <strong>
+          {{activeSourceCount}}
+        </strong>
+        <small>
+          Active components
+        </small>
+      </div>
+      <div class="metric">
+        <strong>
+          {{peak.toFixed(3)}}
+        </strong>
+        <small>
+          Peak
+        </small>
+      </div>
+      <div class="metric">
+        <strong>
+          {{rms.toFixed(3)}}
+        </strong>
+        <small>
+          RMS
+        </small>
+      </div>
+      <div class="metric">
+        <strong>
+          {{keyCount}}
+        </strong>
+        <small>
+          Committed frames
+        </small>
+      </div>
+    </div>
+    <p v-if="renderWarning" class="quality-note" style="color:var(--amber)">
+      {{renderWarning}}
+    </p>
+  </div>
+</div>

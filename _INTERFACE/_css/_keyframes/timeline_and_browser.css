@@ -1,0 +1,289 @@
+/*
+ * Draggable keyframe timeline, previews and waveform libraries.
+ *
+ * Styles are concatenated in manifest order to preserve the legacy cascade.
+ */
+
+/* v0.6 wavetable preview, circuit type and draggable timeline controls */
+
+.source-variant {
+    font-size: 9px;
+    color: var(--sub);
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.key-marker,.blend-handle {
+    touch-action: none;
+    position: absolute;
+    z-index: 4;
+    cursor: grab;
+    border: 0;
+    padding: 0;
+    transform: translateX(-50%);
+    transition: none;
+}
+
+.key-marker {
+    top: 3px;
+    height: 20px;
+    width: 13px;
+    min-height: 0;
+    border-radius: 3px;
+    background: #7be3d6;
+    border: 2px solid #17343d;
+    box-shadow: 0 0 0 1px #87ddd0;
+}
+
+.key-marker.active {
+    background: #f7cb84;
+    box-shadow: 0 0 0 2px #f0d2a0;
+    z-index: 6;
+}
+
+.key-marker.dragging,.blend-handle.dragging {
+    cursor: grabbing;
+    z-index: 9;
+}
+
+.blend-handle {
+    bottom: 1px;
+    width: 13px;
+    height: 13px;
+    min-height: 0;
+    background: #cba9f2;
+    border: 1px solid #192d40;
+    border-radius: 2px;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.blend-handle:hover {
+    background: #f0d4ff;
+}
+
+.track {
+    height: 39px;
+    touch-action: none;
+    user-select: none;
+    overflow: visible;
+}
+
+.track .playhead {
+    pointer-events: none;
+    z-index: 2;
+}
+
+.table-audition-controls {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: nowrap;
+    margin-top: 4px;
+    white-space: nowrap;
+}
+
+.table-audition-controls button {
+    min-height: 25px;
+    padding: 3px 8px;
+    font-size: 10px;
+}
+
+.table-audition-controls select {
+    height: 25px;
+    width: 64px;
+    min-height: 0;
+    padding: 2px 4px;
+    font-size: 10px;
+}
+
+.compact-label {
+    font-size: 10px;
+    color: var(--sub);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.timeline-extra,.render-count-control {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.timeline-extra .muted,.render-count-control .muted {
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.marker-key-icon {
+    color: #78e7db;
+}
+
+.handle-key-icon {
+    color: #c5b0fa;
+}
+
+.timeline-extra label {
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.timeline-extra input[type=range] {
+    width: 66px;
+    min-width: 60px;
+}
+
+.render-count-control {
+    gap: 7px;
+}
+
+.render-count-control label {
+    font-size: 10px;
+    color: var(--sub);
+}
+
+.render-count-control select {
+    height: 26px;
+    min-width: 110px;
+    width: 112px;
+    min-height: 0;
+    font-size: 10px;
+    padding: 2px 4px;
+}
+
+.frame-panel .frame-options {
+    gap: 4px;
+}
+
+.audio-panel .panel-body {
+    padding: 5px 10px;
+}
+
+@media (min-width:1000px) and (min-height:680px) {
+    .layout {
+        grid-template-rows: minmax(145px,1fr) 86px 124px 206px;
+    }
+    .frame-panel .panel-body {
+        grid-template-rows: 26px 39px 12px 27px 27px;
+        grid-template-columns: minmax(0,1fr) minmax(380px,1fr);
+        gap: 3px 10px;
+        padding: 5px 10px;
+    }
+    .frame-panel .frame-top {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .frame-panel .track {
+        grid-column: 1;
+        grid-row: 2;
+        height: 39px;
+        margin: 0;
+    }
+    .frame-panel .ticks {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    .frame-panel .panel-body>input[type=range] {
+        grid-column: 1;
+        grid-row: 4;
+        height: 26px;
+    }
+    .frame-panel .timeline-extra {
+        grid-column: 1;
+        grid-row: 5;
+    }
+    .frame-panel .mode-row {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    .frame-panel .frame-options {
+        grid-column: 2;
+        grid-row: 2;
+        min-width: 0;
+    }
+    .frame-panel .commit-row {
+        grid-column: 2;
+        grid-row: 3;
+        min-height: 27px;
+        align-self: stretch;
+    }
+    .frame-panel .commit-row button {
+        min-height: 26px;
+    }
+    .frame-panel .key-list {
+        grid-column: 2;
+        grid-row: 4;
+        min-height: 27px;
+        max-height: 27px;
+    }
+    .frame-panel .render-count-control {
+        grid-column: 2;
+        grid-row: 5;
+    }
+    .frame-panel .footer-help {
+        display: none;
+    }
+    .audio-panel .panel-body {
+        padding: 4px 9px;
+    }
+    .audio-panel .audio-help:not(.warning) {
+        display: none;
+    }
+    .audio-panel .table-audition-controls {
+        margin-top: 4px;
+    }
+    .source-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .source-variant {
+        font-size: 9px;
+    }
+}
+
+@media (min-width:1000px) and (min-height:680px) and (max-height:820px) {
+    .layout {
+        grid-template-rows: minmax(135px,1fr) 81px 117px 194px;
+    }
+    .frame-panel .panel-body {
+        grid-template-rows: 26px 36px 12px 26px 25px;
+        gap: 2px 10px;
+    }
+    .frame-panel .track {
+        height: 36px;
+    }
+}
+
+@media (max-width:999px) {
+    .table-audition-controls,.timeline-extra,.render-count-control {
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+    .track {
+        min-height: 42px;
+    }
+}
+
+@media (min-width:1000px) and (min-height:680px) {
+    /* Keep the action row free of the old chip list at laptop heights. Timeline
+    markers are directly selectable/draggable, so the chip list is redundant. */
+    .frame-panel .commit-row {
+        grid-column: 2;
+        grid-row: 3 / span 2;
+        align-self: center;
+        min-height: 29px;
+        z-index: 3;
+    }
+    .frame-panel .key-list {
+        display: none;
+    }
+}

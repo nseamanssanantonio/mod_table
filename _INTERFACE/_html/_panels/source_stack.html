@@ -1,0 +1,118 @@
+<!-- source stack -->
+<template v-if="tab==='sources'">
+  <div class="panel-head">
+    <h2>
+      Wave stack
+    </h2>
+    <span class="count">
+      {{sources.length}} / 64
+    </span>
+  </div>
+  <div class="stack-scroll">
+    <template v-for="(w,i) in sources" :key="w.id">
+      <div
+        v-if="i>0"
+        class="relation-link"
+        :class="{active:selectedSourceId===w.id,off:!w.relation.on}"
+        @click="focusObject('relation',w.id)"
+        @contextmenu.stop.prevent="showContext($event,'wave',w.id)"
+        data-tip="This connector defines how the LOWER wave interacts with the wave(s) above it; click to inspect or choose a relation.">
+        <span class="relation-line">
+          ↓
+        </span>
+        <select
+          v-model="w.relation.type"
+          @click.stop="focusObject('relation',w.id)"
+          @change="relationChanged(w)"
+          @dblclick.prevent.stop="w.relation.type='add';relationChanged(w)"
+          :aria-label="'Relation before wave '+(i+1)">
+          <optgroup v-for="g in relationGroups" :key="g" :label="g">
+            <option v-for="rel in relations.filter(x=>x.group===g)" :key="rel.id" :value="rel.id">
+              {{rel.label}}
+            </option>
+          </optgroup>
+        </select>
+        <button
+          class="icon quiet"
+          @click.stop="focusObject('relation',w.id)"
+          :aria-label="'Edit relation before wave '+(i+1)"
+          title="Edit relationship in the inspector">
+          ⚙
+        </button>
+      </div>
+      <article
+        class="source-card"
+        :class="{selected:selectedSourceId===w.id,off:!w.on}"
+        @click="focusObject('wave',w.id)"
+        @contextmenu.stop.prevent="showContext($event,'wave',w.id)"
+        data-tip="One component of the composite cycle. Left-click to inspect; right-click to copy, duplicate, toggle, or remove.">
+        <div class="row">
+          <span class="count">
+            {{String(i+1).padStart(2,'0')}}
+          </span>
+          <span class="dot" :style="{background:sourceColor(i)}">
+          </span>
+          <span class="source-title" :title="variantLabel(w)">
+            {{waveLabel(w.type)}}
+            <span class="source-variant">
+              {{w.variant==='clean'?'':'• ' + variantLabel(w).split(' · ')[0]}}
+            </span>
+          </span>
+          <button class="small quiet" @click.stop="w.on=!w.on;edit()" :aria-label="'Toggle wave '+(i+1)">
+            {{w.on?'On':'Off'}}
+          </button>
+          <button class="icon quiet danger remove-source" @click.stop="removeSource(w.id)" :aria-label="'Remove wave '+(i+1)" title="Remove this wave">
+            ×
+          </button>
+        </div>
+        <svg class="mini-wave" viewBox="0 0 240 46" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 23H240" fill="none" stroke="#34535f"/>
+          <path :d="miniPath(w)" fill="none" :stroke="sourceColor(i)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="source-foot">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="0.1"
+            :value="w.influence"
+            @input.stop="w.influence=+$event.target.value;edit()"
+            @dblclick.prevent.stop="w.influence=100;edit()"
+            title="Double-click to reset influence"
+            @click.stop
+            @pointerdown.stop="fineStart($event,v=>{w.influence=v;edit()},0,100,.1,w.influence)"
+            :aria-label="'Influence of wave '+(i+1)">
+          <output>
+            {{Math.round(w.influence)}}%
+          </output>
+        </div>
+        <div class="muted" style="font-size:9px">
+          {{Number(w.interval).toFixed(2)}}× interval · {{w.regionStart ?? 0}}–{{w.regionEnd ?? 100}}% region · {{w.polarity===1?'positive':'inverted'}} · {{w.phase}}° phase
+        </div>
+      </article>
+    </template>
+    <div v-if="!sources.length" class="empty">
+      Empty stack — add a wave to begin.
+      <br>
+      Committed frames are untouched.
+    </div>
+  </div>
+  <div class="add-row">
+    <button class="small" @click="openPicker('wave')" data-tip="Search and favorite individual waveform types from every family.">
+      Browse waves
+    </button>
+    <button class="primary" @click="addSource" :disabled="sources.length>=64">
+      + Add wave
+    </button>
+    <button @click="duplicateSource" :disabled="!selectedSource||sources.length>=64">
+      Duplicate
+    </button>
+  </div>
+  <div class="hint stack-hint">
+    Relations belong to the lower wave. FM defaults to the previous enabled wave as carrier.
+    <strong>
+      One composite cycle
+    </strong>
+    , not multiple synth voices.
+  </div>
+</template>

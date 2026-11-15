@@ -1,0 +1,412 @@
+<!-- keyframe timeline -->
+<div class="panel frame-panel">
+  <div class="panel-head">
+    <h2>
+      Wavetable keyframes
+    </h2>
+    <span class="count">
+      {{keyCount}} / 256 stored
+    </span>
+  </div>
+  <div class="panel-body">
+    <div class="frame-top">
+      <div>
+        <strong style="font-size:11px">
+          Destination / table position
+        </strong>
+        <p class="muted" style="font-size:10px">
+          Commit bakes the working wave into this position.
+        </p>
+      </div>
+      <div class="frame-number">
+        <input
+          type="number"
+          min="1"
+          max="256"
+          :value="position+1"
+          @change="setPosition(+$event.target.value-1)"
+          @dblclick.prevent.stop="setPosition(0)"
+          title="Double-click to return to frame 1"
+          aria-label="Destination frame">
+        <span>
+          / 256
+        </span>
+      </div>
+    </div>
+    <div
+      class="track"
+      @contextmenu.prevent="showContext($event,'frame',position)"
+      data-tip="Keyframe timeline. Click to choose a position; drag teal stored markers to reposition; drag purple diamonds to change transition bias; right-click for frame actions."
+      @pointerdown="trackDown"
+      @pointermove="trackMove"
+      @pointerup="trackUp"
+      @pointercancel="trackUp"
+      role="slider"
+      tabindex="0"
+      :aria-valuenow="position+1"
+      aria-valuemin="1"
+      aria-valuemax="256"
+      aria-label="Keyframe timeline"
+      @keydown.left.prevent="setPosition(position-1)"
+      @keydown.right.prevent="setPosition(position+1)">
+      <button
+        v-for="p in keyPositions"
+        :key="'k'+p"
+        class="key-marker"
+        :class="{active:p===position,dragging:frameDrag?.from===p}"
+        :style="{left:(keyMarkerPos(p)/255*100)+'%'}"
+        @pointerdown.stop="beginKeyDrag($event,p)"
+        @contextmenu.stop.prevent="showContext($event,'frame',p)"
+        :title="'Drag keyframe '+(p+1)+' to change its timeline position'"
+        :aria-label="'Drag keyframe '+(p+1)">
+      </button>
+      <button
+        v-for="b in blendSegments.filter(x=>x.span>=4)"
+        :key="'b'+b.from"
+        class="blend-handle"
+        :class="{dragging:blendDrag?.from===b.from}"
+        :style="{left:((blendDrag?.from===b.from?(b.from+(b.to-b.from)*blendDrag.lead):b.x)/255*100)+'%'}"
+        @pointerdown.stop="beginBlendDrag($event,b)"
+        :title="'Drag to set transition midpoint between frames '+(b.from+1)+' and '+(b.to+1)"
+        :aria-label="'Transition bias after keyframe '+(b.from+1)">
+      </button>
+      <i class="playhead" :style="{left:((mode==='table'?previewPosition:position)/255*100)+'%'}">
+      </i>
+    </div>
+    <div class="ticks">
+      <span>
+        1
+      </span>
+      <span>
+        64
+      </span>
+      <span>
+        128
+      </span>
+      <span>
+        192
+      </span>
+      <span>
+        256
+      </span>
+    </div>
+    <input
+      type="range"
+      min="0"
+      max="255"
+      step="1"
+      :value="position"
+      @input="setPosition(+$event.target.value)"
+      @dblclick.prevent.stop="setPosition(0)"
+      title="Double-click to return to frame 1"
+      aria-label="Wavetable position">
+    <div class="frame-options">
+      <label>
+        Between keyframes
+      </label>
+      <select v-model="morph" @change="tableChanged()" @dblclick.prevent.stop="morph='time';tableChanged()" aria-label="Keyframe transition method">
+        <option v-for="m in transitions" :key="m.id" :value="m.id">
+          {{m.label}}
+        </option>
+      </select>
+      <select v-model="curve" @change="tableChanged()" aria-label="Interpolation curve" @dblclick.prevent.stop="curve='smooth';tableChanged()">
+        <option v-for="c in MT_CURVES" :value="c.id">
+          {{c.label}}
+        </option>
+      </select>
+    </div>
+    <div class="mode-row">
+      <div class="segmented">
+        <button :class="{active:mode==='draft'}" @click="setMode('draft')">
+          Working wave
+        </button>
+        <button :class="{active:mode==='table'}" @click="setMode('table')" :disabled="!keyCount">
+          Committed table
+        </button>
+      </div>
+      <span class="muted" style="font-size:10px">
+        {{currentKey?'Stored frame · '+currentKey.quality+'× render':'No keyframe here'}}
+      </span>
+    </div>
+    <div class="timeline-extra">
+      <span class="muted">
+        Drag
+        <b class="marker-key-icon">
+          ◆
+        </b>
+        keyframes to reposition. Drag
+        <b class="handle-key-icon">
+          ◆
+        </b>
+        transition diamonds to bias the fade.
+      </span>
+      <label v-if="currentKey&&keyPositions.indexOf(position)<keyCount-1">
+        Lead
+        <input
+          type="range"
+          min="0.05"
+          max="0.95"
+          step="0.01"
+          :value="currentKey.lead??0.5"
+          @input="setSelectedLead(+$event.target.value)"
+          @dblclick.prevent.stop="setSelectedLead(0.5)"
+          title="Double-click to center transition bias"
+          aria-label="Selected keyframe transition bias">
+        {{Math.round((currentKey.lead??0.5)*100)}}%
+      </label>
+    </div>
+    <details class="transition-settings">
+      <summary>
+        Transition designer
+        <span>
+          {{transitionInfo(morph).label}} · saved endpoints stay exact
+        </span>
+      </summary>
+      <div class="transition-grid">
+        <div v-if="!['linear','smooth','smoother'].includes(curve)" class="curve-settings">
+          <h3>
+            {{MT_CURVES.find(c=>c.id===curve)?.label}} progression
+          </h3>
+          <select
+            v-if="['sine','power','exponential'].includes(curve)"
+            v-model="curveSettings.direction"
+            @change="tableChanged"
+            aria-label="Progression direction">
+            <option value="in">
+              Ease in
+            </option>
+            <option value="out">
+              Ease out
+            </option>
+            <option value="inout">
+              Ease in/out
+            </option>
+          </select>
+          <control-slider
+            v-if="curve==='power'"
+            label="Curve exponent"
+            :reset-value="3"
+            :model-value="curveSettings.exponent"
+            @update:model-value="curveSettings.exponent=$event;tableChanged()"
+            :min=".2"
+            :max="8"
+            :step=".1">
+          </control-slider>
+          <control-slider
+            v-if="curve==='exponential'"
+            label="Curve steepness"
+            :reset-value="6"
+            :model-value="curveSettings.steepness"
+            @update:model-value="curveSettings.steepness=$event;tableChanged()"
+            :min=".1"
+            :max="12"
+            :step=".1">
+          </control-slider>
+          <template v-if="curve==='bezier'">
+            <control-slider
+              v-for="(v,k) in {x1:.25,y1:.1,x2:.75,y2:.9}"
+              :key="k"
+              :label="'Bézier '+k"
+              :reset-value="v"
+              :model-value="curveSettings[k]"
+              @update:model-value="curveSettings[k]=$event;tableChanged()"
+              :min="0"
+              :max="1"
+              :step=".01">
+            </control-slider>
+          </template>
+          <template v-if="curve==='hold'">
+            <control-slider
+              label="Start hold"
+              :reset-value=".2"
+              :model-value="curveSettings.startHold"
+              @update:model-value="curveSettings.startHold=$event;tableChanged()"
+              :min="0"
+              :max=".9"
+              :step=".01">
+            </control-slider>
+            <control-slider
+              label="End hold"
+              :reset-value=".2"
+              :model-value="curveSettings.endHold"
+              @update:model-value="curveSettings.endHold=$event;tableChanged()"
+              :min="0"
+              :max=".9"
+              :step=".01">
+            </control-slider>
+          </template>
+          <template v-if="curve==='steps'">
+            <control-slider
+              label="Progression steps"
+              :reset-value="8"
+              :model-value="curveSettings.steps"
+              @update:model-value="curveSettings.steps=$event;tableChanged()"
+              :min="1"
+              :max="32"
+              :step="1">
+            </control-slider>
+            <control-slider
+              label="Step glide"
+              :reset-value=".5"
+              :model-value="curveSettings.glide"
+              @update:model-value="curveSettings.glide=$event;tableChanged()"
+              :min=".001"
+              :max="1"
+              :step=".01">
+            </control-slider>
+          </template>
+          <template v-if="curve==='elastic'">
+            <control-slider
+              label="Rebound amount"
+              :reset-value=".3"
+              :model-value="curveSettings.amount"
+              @update:model-value="curveSettings.amount=$event;tableChanged()"
+              :min="0"
+              :max="1"
+              :step=".01">
+            </control-slider>
+            <control-slider
+              label="Repetitions"
+              :reset-value="3"
+              :model-value="curveSettings.rebounds"
+              @update:model-value="curveSettings.rebounds=$event;tableChanged()"
+              :min="1"
+              :max="12"
+              :step="1">
+            </control-slider>
+            <control-slider
+              label="Damping"
+              :reset-value="4"
+              :model-value="curveSettings.damping"
+              @update:model-value="curveSettings.damping=$event;tableChanged()"
+              :min="0"
+              :max="12"
+              :step=".1">
+            </control-slider>
+          </template>
+        </div>
+        <control-slider
+          v-if="!['time','spectral','equalpower'].includes(morph)"
+          label="Transition intensity"
+          :reset-value="60"
+          :model-value="transition.amount"
+          @update:model-value="transition.amount=$event;tableChanged()"
+          :min="0"
+          :max="100"
+          :step="1"
+          unit="%">
+        </control-slider>
+        <control-slider
+          v-if="!['time','spectral','equalpower','gravity','collision','liquid','melt','implosion','diffusion'].includes(morph)"
+          label="Transition complexity"
+          :reset-value="4"
+          :model-value="transition.detail"
+          @update:model-value="transition.detail=$event;tableChanged()"
+          :min="1"
+          :max="16"
+          :step="1"
+          unit="">
+        </control-slider>
+        <label class="compact-label" v-if="['scatter','fracture','staircase'].includes(morph)">
+          Pattern seed
+          <input
+            type="number"
+            v-model.number="transition.seed"
+            min="0"
+            max="1000000"
+            @change="transition.seed=Math.max(0,Math.min(1000000,Math.round(Number.isFinite(transition.seed)?transition.seed:1)));tableChanged()"
+            @dblclick.prevent.stop="transition.seed=1;tableChanged()"
+            aria-label="Transition seed">
+        </label>
+        <div v-if="currentKey&&keyPositions.indexOf(position)<keyCount-1" class="segment-settings">
+          <label>
+            Outgoing transition from frame {{position+1}}
+          </label>
+          <select
+            :value="currentKey.transition?.mode||'global'"
+            @change="setFrameTransition($event.target.value)"
+            aria-label="Selected keyframe transition override">
+            <option value="global">
+              Follow global transition
+            </option>
+            <option v-for="m in transitions" :key="m.id" :value="m.id">
+              {{m.label}}
+            </option>
+          </select>
+          <control-slider
+            v-if="currentKey.transition &amp;&amp; !['time','spectral','equalpower'].includes(currentKey.transition.mode)"
+            label="Segment intensity"
+            :reset-value="60"
+            :model-value="currentKey.transition.amount"
+            @update:model-value="updateFrameTransition('amount',$event)"
+            :min="0"
+            :max="100"
+            :step="1"
+            unit="%">
+          </control-slider>
+        </div>
+      </div>
+      <p class="quality-note">
+        Overrides travel with their left keyframe. Bias diamonds still control the transition midpoint. Intensity 0 uses the dry time blend.
+      </p>
+    </details>
+    <div class="render-count-control">
+      <label>
+        Frames
+      </label>
+      <input
+        type="number"
+        min="2"
+        max="256"
+        v-model.number="renderFrames"
+        @change="finishChanged"
+        @dblclick.prevent.stop="renderFrames=256;finishChanged()"
+        aria-label="Rendered wavetable frames">
+      <label>
+        Samples/frame
+      </label>
+      <select
+        v-model.number="samplesPerFrame"
+        @change="finishChanged"
+        @dblclick.prevent.stop="samplesPerFrame=2048;finishChanged()"
+        aria-label="Wavetable samples per frame">
+        <option v-for="n in MT_FRAME_SIZES" :value="n">
+          {{n.toLocaleString()}}
+        </option>
+      </select>
+      <button class="small quiet" @click="selectTab('tablefx')">
+        Finish →
+      </button>
+    </div>
+    <div class="commit-row">
+      <button
+        id="commitBtn"
+        data-tip="Renders your working composite into the currently selected stored frame. This includes all wave relations and the 16-slot modifier chain."
+        class="primary"
+        @click="commit"
+        :disabled="!ready||committing||finalBuilding||!sources.length">
+        {{committing?'Rendering commit…':(currentKey?'◆ Replace frame ':'◆ Commit to frame ')+frameText}}
+      </button>
+      <button @click="loadKey" :disabled="!currentKey||committing">
+        Load to edit
+      </button>
+      <button class="danger quiet" @click="deleteKey" :disabled="!currentKey||committing">
+        Delete frame
+      </button>
+    </div>
+    <div class="key-list" v-if="keyCount">
+      <button
+        v-for="p in keyPositions"
+        :key="p"
+        :class="{active:p===position}"
+        @click="setPosition(p,true)"
+        @contextmenu.stop.prevent="showContext($event,'frame',p)"
+        :title="'Preview keyframe '+(p+1)+'; use Load to edit to restore its recipe'">
+        #{{String(p+1).padStart(3,'0')}}
+      </button>
+    </div>
+    <p class="footer-help">
+      Committed waves are frozen. Changing sources, effects, or Initialize never changes saved frames until you commit again.
+    </p>
+  </div>
+</div>

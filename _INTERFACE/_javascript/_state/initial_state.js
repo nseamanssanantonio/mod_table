@@ -1,0 +1,77 @@
+/**
+ * The initial editor state and default source waves.
+ *
+ * Functions operate on the shared setup state. Unless otherwise noted,
+ * edits are non-destructive and saved keyframes remain unchanged.
+ */
+
+// Editor state is explicitly named here to make individual values easy to find.
+const editorState = reactive({
+    finish:mtFinishDefaults(),
+    renderOptions:mtRenderDefaults(),
+    samplesPerFrame:2048,
+    curveSettings:mtCurveDefaults(),
+    selectedFilterPosition:0,
+    filterDrag:null,
+    renderReport:null,
+    finalBuilding:false,
+    renderStage:'',
+    renderProgress:0,
+    reportOpen:false,
+    previewFinalCached:false,
+    ready:false,
+    error:'',
+    message:'Preparing waveform editor…',
+    tab:'sources',
+    search:'',
+    view:'wave',
+    mode:'draft',
+    sources:[newSource('sine',1,85),newSource('triangle',2,35),newSource('trapezoid',3,20)],
+    effects:[],
+    output:defaults(),
+    selectedSourceId:'w1',
+    selectedEffectId:null,
+    frames:Array(256).fill(null),
+    position:0,
+    previewPosition:0,
+    renderFrames:256,
+    sweeping:false,
+    sweepSeconds:6,
+    frameDrag:null,
+    blendDrag:null,
+    morph:'time',
+    curve:'smooth',
+    transition:defaultTransition(),
+    previewQuality:4,
+    commitQuality:8,
+    previewHz:110,
+    volume:50,
+    playing:false,
+    playbackMode:null,
+    audioStarting:false,
+    audioContextState:'not started',
+    audioBackend:'Native Web Audio',
+    audioRate:0,
+    audioRMS:0,
+    audioDb:-120,
+    audioHasWave:false,
+    audioFrameRMS:0,
+    audioTesting:false,
+    audioError:'',
+    rendering:false,
+    committing:false,
+    exporting:false,
+    exportProgress:0,
+    dirty:true,
+    renderMs:0,
+    displayQuality:4,
+    peak:0,
+    rms:0,
+    renderWarning:'',
+    undoDraft:null,
+    dialog:null
+});
+
+editorState.sources[1].phase = 25;
+
+editorState.sources[2].size = 35;

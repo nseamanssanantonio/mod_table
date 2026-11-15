@@ -1,0 +1,15 @@
+<!-- context menu -->
+<div class="ui-context-menu" v-if="contextMenu" :style="{left:contextMenu.x+'px',top:contextMenu.y+'px'}" role="menu" @click.stop>
+  <div class="ui-context-title">
+    {{contextMenu.kind}} actions
+  </div>
+  <button
+    v-for="act in contextActions"
+    :key="act.id"
+    role="menuitem"
+    :class="{danger:act.danger}"
+    :disabled="act.disabled"
+    @click="contextAction(act.id)">
+    {{act.label}}
+  </button>
+</div>

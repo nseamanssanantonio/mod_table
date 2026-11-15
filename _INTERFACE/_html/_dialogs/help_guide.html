@@ -1,0 +1,74 @@
+<!-- help guide -->
+<div class="help-overlay" v-if="helpOpen" @click.self="closeHelp" @keydown.esc.stop.prevent="closeHelp">
+  <section id="mod-table-help" class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="mod-help-title" tabindex="-1">
+    <div class="help-top">
+      <div>
+        <h2 id="mod-help-title">
+          Mod Table — User Guide
+        </h2>
+        <p>
+          Build one wave, commit keyframes, morph and filter the finished table, then export.
+        </p>
+      </div>
+      <button class="help-close" @click="closeHelp" aria-label="Close help guide">
+        ✕
+      </button>
+    </div>
+    <div class="help-tools">
+      <input ref="helpSearchInput" v-model="helpSearch" class="help-search" type="search" placeholder="Search the guide…" aria-label="Search help topics">
+      <button v-if="helpSearch" class="small quiet" @click="helpSearch=''">
+        Clear
+      </button>
+    </div>
+    <div class="help-body">
+      <nav class="help-nav" aria-label="Help topics">
+        <button
+          v-for="section in filteredHelpSections"
+          :key="section.id"
+          :class="{active:helpTopic===section.id}"
+          @click="helpTopic=section.id"
+          :aria-current="helpTopic===section.id?'true':null">
+          {{section.title}}
+        </button>
+      </nav>
+      <div class="help-article" tabindex="0">
+        <template v-if="activeHelpSection">
+          <div class="help-eyebrow">
+            {{activeHelpSection.kicker}}
+          </div>
+          <h3>
+            {{activeHelpSection.title}}
+          </h3>
+          <p class="help-intro">
+            {{activeHelpSection.intro}}
+          </p>
+          <div v-for="(block,i) in activeHelpSection.blocks" :key="i" class="help-block">
+            <h4>
+              {{block.heading}}
+            </h4>
+            <p>
+              {{block.text}}
+            </p>
+          </div>
+          <div v-if="activeHelpSection.tip" class="help-tip">
+            <strong>
+              Useful tip:
+            </strong>
+            {{activeHelpSection.tip}}
+          </div>
+        </template>
+        <div v-else class="help-empty">
+          No matching topics. Try “filter”, “commit”, “ratio”, “audio”, or “export”.
+        </div>
+      </div>
+    </div>
+    <div class="help-bottom">
+      <span>
+        {{filteredHelpSections.length}} topic{{filteredHelpSections.length===1?'':'s'}} · Works offline · Shortcut: Esc to close
+      </span>
+      <button class="primary" @click="closeHelp">
+        Back to editor
+      </button>
+    </div>
+  </section>
+</div>

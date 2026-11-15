@@ -1,0 +1,82 @@
+<!-- preset manager -->
+<div class="ui-dialog-backdrop" v-if="presetsOpen" @click.self="presetsOpen=false" @keydown.esc.stop.prevent="presetsOpen=false">
+  <section class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="preset-title">
+    <header class="ui-dialog-head">
+      <div>
+        <h2 id="preset-title">
+          Presets & reusable settings
+        </h2>
+        <p>
+          Save a wave, all 16 modifier slots, or the complete working recipe.
+        </p>
+      </div>
+      <button class="icon quiet" @click="presetsOpen=false" aria-label="Close presets">
+        ×
+      </button>
+    </header>
+    <div class="ui-dialog-content">
+      <div class="ui-presets-form">
+        <label>
+          Preset name
+          <input class="search" v-model="presetName" maxlength="60" placeholder="e.g., Fractured glass wave" aria-label="Preset name">
+        </label>
+        <label>
+          Save
+          <select v-model="presetKind" aria-label="Preset category">
+            <option value="wave">
+              Selected wave
+            </option>
+            <option value="chain">
+              Modifier chain
+            </option>
+            <option value="recipe">
+              Full working recipe
+            </option>
+          </select>
+        </label>
+        <button class="primary" @click="savePreset">
+          + Save preset
+        </button>
+      </div>
+      <p class="quality-note">
+        Saved keyframes are not changed by applying a preset. Presets persist in browser storage when supported. Export a JSON backup before clearing browser data.
+      </p>
+      <div class="preset-list">
+        <button v-for="p in presetLibrary" :key="p.id" :class="{selected:presetSelection===p.id}" @click="presetSelection=p.id">
+          <strong>
+            {{p.name}}
+          </strong>
+          <small>
+            {{p.kind}}
+          </small>
+        </button>
+        <p v-if="!presetLibrary.length" class="empty">
+          No presets saved yet.
+        </p>
+      </div>
+      <div class="row">
+        <button class="primary" :disabled="!presetSelection" @click="applyPreset">
+          Apply selected
+        </button>
+        <button class="small danger" :disabled="!presetSelection" @click="deletePreset">
+          Delete
+        </button>
+        <button class="small" @click="exportPresets">
+          Export presets JSON
+        </button>
+        <button class="small" @click="presetFile?.click()">
+          Import presets
+        </button>
+        <input ref="presetFile" type="file" accept=".json,application/json" class="file-input" @change="importPresets">
+      </div>
+    </div>
+    <footer class="ui-dialog-footer">
+      <span>
+        Ctrl+C / Ctrl+V also copy and paste selected wave or effect settings during this session.
+      </span>
+      <button @click="presetsOpen=false">
+        Close
+      </button>
+    </footer>
+  </section>
+</div>
