@@ -89,33 +89,3 @@ Mod-Table/
 ├── docs/                           # Architecture, style, test records
 └── dist/                           # Finished standalone HTML
 ```
-
-## Where to make a change
-
-| You want to change… | Start here |
-|---|---|
-| An experimental waveform | `_DSP/_c++/_waveforms/experimental_shapes.hpp` |
-| How stacked waves combine | `_DSP/_c++/_relationships/relationship_algorithms.hpp` |
-| Available wave/relation labels | `_DSP/_webassembly/_shared/_catalogs/` |
-| Keyframe transition math | `_DSP/_c++/_transitions/` and `_DSP/_webassembly/_shared/_settings/progression_curves.js` |
-| Final resonance/filtering | `_DSP/_c++/_filters/` and `_DSP/_webassembly/_worker/_filters/` |
-| Deep Scan | `_DSP/_webassembly/_worker/_rendering/deep_scan.js` |
-| Keyframe timeline controls | `_INTERFACE/_html/_panels/keyframe_timeline.html` and `_INTERFACE/_javascript/_keyframes/` |
-| Help text and hover explanations | `_INTERFACE/_javascript/_help/` and `_INTERFACE/_html/_dialogs/` |
-| Slider appearance or behavior | `_INTERFACE/_html/_components/slider.html`, `_INTERFACE/_css/`, `_INTERFACE/_javascript/_components/slider_component.js` |
-| Preview or audio output | `_INTERFACE/_javascript/_audio/` |
-| Final export | `_INTERFACE/_javascript/_table_finish/`, `_INTERFACE/_javascript/_projects/`, `_DSP/_webassembly/_worker/_rendering/` |
-
-## A couple of rules for development
-
-**Keep each function focused on one responsibility.** Use descriptive names, comment why a decision is necessary, and give each file a short multiline purpose statement. Document classes with multiline comments and ordinary functions with a concise one-line description. The retained third-party DSP headers are deliberately kept intact.
-
-The project keeps the existing **stable waveform IDs, effect IDs, saved project schema, and output conventions**. Avoid renaming those identifiers just to change a displayed label. Do not change the DSP processing order without reference-render tests.
-
-See [Architecture](docs/ARCHITECTURE.md), [Code Style](docs/CODE_STYLE.md), and [Refactor Verification](docs/REFACTOR_VALIDATION.md) for the detailed development conventions.
-
-## Scope of this refactor
-
-This is an organization-and-readability pass on the working 0.9.1 editor, **not a new synthesis algorithm**. The current Vue `setup()` logic is divided into ordered, purpose-specific source files and assembled at build time into the same lexical scope. That compatibility step deliberately preserves existing reactive dependencies. Over time, these groups can be moved into independently imported composables without mixing it into the initial directory migration.
-
-The final HTML remains standalone; `dist/` is generated and should not be edited by hand.
