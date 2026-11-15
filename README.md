@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎛️ Mod Table
+# Mod Table
 
 **Build waves. Shape transitions. Export wavetables.**
 
@@ -8,13 +8,13 @@ A standalone wavetable editor I've been working on. The idea is to build a wavef
 
 **This is a wavetable editor, not a synthesizer.**
 
-[**🌐 Open Mod Table**](https://nseamanssanantonio.github.io/mod_table/) · [**💻 View the editor file**](mod_table.main.html) · [**📖 Getting started**](#getting-started)
+[**Open Mod Table**](https://nseamanssanantonio.github.io/mod_table/mod_table.main.html) · [**View the editor file**](mod_table.main.html) · [**Getting started**](#getting-started)
 
 </div>
 
 ---
 
-## ✨ What it does
+## What it does
 
 - **64 waveform layers** — mix, shape, position, and combine waves.
 - **Wave relationships** — arithmetic, phase modulation, FM, through-zero FM, spectral operations, and more.
@@ -29,9 +29,9 @@ A standalone wavetable editor I've been working on. The idea is to build a wavef
 
 There are also Undo/Redo, presets, waveform comparison, keyboard shortcuts, a built-in Help guide, and mouse-following Tips.
 
-## 🚀 Getting started
+## Getting started
 
-**Try it online:** [nseamanssanantonio.github.io/mod_table](https://nseamanssanantonio.github.io/mod_table/)
+**Try it online:** [nseamanssanantonio.github.io/mod_table](https://nseamanssanantonio.github.io/mod_table/mod_table.main.html)
 
 GitHub Pages opens [`mod_table.main.html`](mod_table.main.html) through the root [`index.html`](index.html). The website is a static app; the waveform processing runs in your browser.
 
@@ -48,7 +48,7 @@ A basic workflow is:
 
 The **Help** button in the editor explains the controls in more detail.
 
-## 🗂️ Project structure
+## Project structure
 
 I've separated the project by **processing** and **interface**. Within those, code is grouped by language, feature, and responsibility so it's easier to find and work on.
 
@@ -106,7 +106,7 @@ mod_table/
 | Build order | `build.manifest.json` |
 | Final published application | `mod_table.main.html` (generated output) |
 
-## 🛠️ Building from source
+## Building from source
 
 You'll need **Node.js 18+**. Rebuilding the processing engine also requires a C++ compiler with WebAssembly target support.
 
@@ -129,7 +129,7 @@ The build produces `dist/Mod_Table.html` locally. The repository's `mod_table.ma
 
 **Please edit the files in `_DSP/` and `_INTERFACE/`, not the generated application.** The source manifest controls how everything is assembled.
 
-## 🧭 How I want the code organized
+## How I want the code organized
 
 I'm trying to keep this project readable for humans:
 
@@ -141,7 +141,7 @@ I'm trying to keep this project readable for humans:
 - Prefer small, focused functions over giant methods.
 - Keep the interface separate from the processing engine.
 
-## 📌 Status
+## Status
 
 **Work in progress.** The editor is usable, but I'm still improving the interface, waveform processing, rendering quality, and compatibility with different wavetable synths. Experimental modes may change as I refine them.
 
