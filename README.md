@@ -17,12 +17,7 @@ It's not a synthesizer. It's meant to create wavetables that can be exported and
 - Automatic peak normalization on export.
 - Save and reload projects.
 
-### Running it
-
-Download the HTML file and open it in Chrome or Edge. No installation is required.
-
 ### Development
 
 This is still a work in progress. I'm continuing to improve the interface, rendering quality, and waveform processing. Some of the more experimental features will probably change as I work through them.
-
 The goal is to make something that's fairly easy to use for simple wavetables but has enough options to create some really unusual ones.
