@@ -1,0 +1,10 @@
+import fs from 'node:fs';import path from 'node:path';import{fileURLToPath}from'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const e=(await WebAssembly.instantiate(fs.readFileSync(path.join(root,'_DSP/_webassembly/_binary/modtable.wasm')),{math:Math})).instance.exports;e.__wasm_call_ctors();
+const types=['sine','saw','square','triangle','trapezoid'];
+const source=(id,type,interval,influence,size=50,phase=0)=>({id,type,interval,influence,size,phase,polarity:1,on:true});
+const first={sources:[source('w1','sine',1,85),source('w2','triangle',2,35,50,25),source('w3','trapezoid',3,20,35)],effects:[],output:{mixMode:'weighted',removeDC:true,normalize:false}};
+const second=JSON.parse(JSON.stringify(first));second.sources[1].influence=55;second.sources[2].phase=40;second.effects=[{id:'e1',type:17,shape:30,mix:60,on:true},{id:'e2',type:52,shape:35,mix:45,on:true},{id:'e3',type:9,shape:30,mix:40,on:true}];
+function bake(recipe,position){const s=new Float32Array(e.memory.buffer,e.mt_sources(),1024),fx=new Float32Array(e.memory.buffer,e.mt_effects(),64);s.fill(0);fx.fill(0);recipe.sources.forEach((w,i)=>s.set([types.indexOf(w.type),1,w.influence/100,w.interval,w.size/100,w.phase/360,w.polarity,0,0,1,0,0,0,0,0,0],i*16));recipe.effects.forEach((f,i)=>fx.set([f.type,f.shape/100,f.mix/100,1],i*4));if(e.mt_render(recipe.sources.length,recipe.effects.length,8,1,1,0)!==2048)throw Error('Render failed');if(new Float32Array(e.memory.buffer,e.mt_stats(),8)[3])throw Error('Stage did not settle');return{position,recipe,quality:8,samples:Array.from(new Float32Array(e.memory.buffer,e.mt_output(),2048))};}
+const p={format:'mod-table-vue-wasm',version:5,samplesPerFrame:2048,frameCount:256,draft:second,keyframes:[bake(first,0),bake(second,255)],settings:{position:255,morph:'time',curve:'smooth',previewQuality:4,commitQuality:8,previewHz:110,volume:45}};
+fs.mkdirSync(path.join(root,'examples'),{recursive:true});fs.writeFileSync(path.join(root,'examples/Clean_to_Viscera.json'),JSON.stringify(p));
